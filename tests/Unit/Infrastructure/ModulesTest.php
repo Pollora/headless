@@ -106,7 +106,7 @@ it('registers nothing when the clean-up is off', function (): void {
 });
 
 it('removes each head item with the priority it was added at', function (): void {
-    Functions\expect('remove_action')->times(12);
+    Functions\expect('remove_action')->times(13);
 
     (new CleanUp(true, false))->cleanHead();
 });
