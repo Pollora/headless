@@ -57,4 +57,22 @@ return [
 
     // Turn the theme and plugin editors off in the administration (DISALLOW_FILE_EDIT).
     'disallow_file_edit' => true,
+
+    // Cache-Control and ETag on the public REST answers (anonymous GET on /wp/v2). WordPress sends none, so a CDN keeps nothing.
+    // Only active once a front-end URL is set. Seconds: for browsers, for shared caches (CDN), and how long a stale copy may be served while it refreshes.
+    'rest_cache' => [
+        'enabled' => true,
+        'max_age' => 60,
+        's_maxage' => 300,
+        'stale_while_revalidate' => 60,
+    ],
+
+    // The largest per_page a request may ask for (WordPress allows 100). A number under 100 lowers it.
+    'per_page_max' => 100,
+
+    // Point permalinks (posts, pages, terms, archives, authors) to the front end: the REST "link" field, "View post", feeds, sitemaps.
+    'rewrite_links' => true,
+
+    // Also move the links inside a post's content (pages of the site only: files and the API stay on WordPress).
+    'rewrite_content_links' => true,
 ];

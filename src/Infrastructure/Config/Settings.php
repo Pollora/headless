@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Pollora\Headless\Infrastructure\Config;
 
+use Pollora\Headless\Domain\Cache\RestCachePolicy;
 use Pollora\Headless\Domain\Cors\CorsPolicy;
 use Pollora\Headless\Domain\Front\AllowList;
 use Pollora\Headless\Domain\Front\FrontGatePolicy;
@@ -37,6 +38,10 @@ final readonly class Settings
         public ?CorsPolicy $cors,
         public bool $restrictUsers,
         public bool $disallowFileEdit,
+        public ?RestCachePolicy $restCache,
+        public ?int $perPageMax,
+        public bool $rewriteLinks,
+        public bool $rewriteContentLinks,
     ) {}
 
     /**
@@ -78,6 +83,10 @@ final readonly class Settings
             cors: self::cors($config['cors'] ?? [], $front),
             restrictUsers: self::bool($config, 'restrict_users', true),
             disallowFileEdit: self::bool($config, 'disallow_file_edit', true),
+            restCache: $front instanceof Origin ? self::restCache($config['rest_cache'] ?? []) : null,
+            perPageMax: self::perPageMax($config),
+            rewriteLinks: self::bool($config, 'rewrite_links', true),
+            rewriteContentLinks: self::bool($config, 'rewrite_content_links', true),
         );
     }
 
@@ -105,6 +114,33 @@ final readonly class Settings
         );
 
         return $policy->hasOrigins() ? $policy : null;
+    }
+
+    private static function restCache(mixed $config): ?RestCachePolicy
+    {
+        $config = is_array($config) ? $config : [];
+
+        if (! self::bool($config, 'enabled', true)) {
+            return null;
+        }
+
+        return new RestCachePolicy(
+            self::int($config, 'max_age', 60),
+            self::int($config, 's_maxage', 300),
+            self::int($config, 'stale_while_revalidate', 60),
+        );
+    }
+
+    /**
+     * The ceiling for `per_page`; null when it would not lower WordPress's own (100).
+     *
+     * @param  array<string, mixed>  $config
+     */
+    private static function perPageMax(array $config): ?int
+    {
+        $max = self::int($config, 'per_page_max', 100);
+
+        return $max >= 1 && $max < 100 ? $max : null;
     }
 
     private static function mode(string $value, bool $hasFront): FrontMode
