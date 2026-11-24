@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Pollora\Headless\Infrastructure\WordPress;
 
+use Pollora\Headless\Domain\Cors\CorsPolicy;
 use Pollora\Headless\Infrastructure\Config\Settings;
 use Pollora\Headless\Infrastructure\Config\SettingsLoader;
 
@@ -48,7 +49,12 @@ final class Bootstrap
         $modules = [
             new CleanUp($settings->cleanHead, $settings->disableXmlRpc),
             new PublicSurface($settings->disableFeeds, $settings->disableSitemaps, $settings->noindexOrigin),
+            new RestSecurity($settings->restrictUsers, $settings->disallowFileEdit),
         ];
+
+        if ($settings->cors instanceof CorsPolicy) {
+            $modules[] = new Cors($settings->cors);
+        }
 
         if ($settings->gate->isActive()) {
             $modules[] = new TemplateRedirectGate($settings->gate, null, $settings->basePath);

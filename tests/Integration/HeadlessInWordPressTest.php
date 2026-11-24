@@ -2,10 +2,13 @@
 
 declare(strict_types=1);
 
+use Pollora\Headless\Domain\Cors\CorsPolicy;
 use Pollora\Headless\Domain\Front\FrontMode;
 use Pollora\Headless\Infrastructure\Config\Settings;
 use Pollora\Headless\Infrastructure\Status\StatusReport;
 use Pollora\Headless\Infrastructure\WordPress\Bootstrap;
+use Pollora\Headless\Infrastructure\WordPress\Cors;
+use Pollora\Headless\Infrastructure\WordPress\RestSecurity;
 use Pollora\Headless\Infrastructure\WordPress\SiteContext;
 use Pollora\Headless\Infrastructure\WordPress\TemplateRedirectGate;
 use Pollora\Headless\Infrastructure\WordPress\WordPressHooks;
@@ -122,4 +125,59 @@ it('describes the real site', function (): void {
         ->and($site->locale)->not->toBe('')
         ->and(wordpressSettings()->mode)->toBe(FrontMode::Redirect)
         ->and($report->rows)->not->toBeEmpty();
+});
+
+it('replaces core\'s CORS handler and answers only the listed origin', function (): void {
+    $lines = [];
+    $cors = new Cors(
+        new CorsPolicy(['https://www.example.com']),
+        static function (string $line) use (&$lines): void {
+            $lines[] = $line;
+        },
+    );
+    $cors->register(new WordPressHooks);
+
+    // Build the REST server again: core adds its handler on rest_api_init, then the package takes it off
+    $GLOBALS['wp_rest_server'] = null;
+    $server = rest_get_server();
+
+    expect(has_filter('rest_pre_serve_request', 'rest_send_cors_headers'))->toBeFalse()
+        ->and(has_filter('rest_pre_serve_request', [$cors, 'send']))->not->toBeFalse();
+
+    $_SERVER['HTTP_ORIGIN'] = 'https://www.example.com';
+    $request = new WP_REST_Request('GET', '/wp/v2/posts');
+    apply_filters('rest_pre_serve_request', false, new WP_REST_Response, $request, $server);
+
+    expect($lines)->toContain('Access-Control-Allow-Origin: https://www.example.com');
+
+    $lines = [];
+    $_SERVER['HTTP_ORIGIN'] = 'https://evil.example.org';
+    apply_filters('rest_pre_serve_request', false, new WP_REST_Response, $request, $server);
+    unset($_SERVER['HTTP_ORIGIN']);
+
+    expect($lines)->toBe(['Vary: Origin']);
+});
+
+it('answers 401 on the users routes to a visitor, and still lists them for an administrator', function (): void {
+    (new RestSecurity(true, false))->register(new WordPressHooks);
+
+    wp_set_current_user(0);
+    $visitor = rest_do_request(new WP_REST_Request('GET', '/wp/v2/users'));
+
+    $administrator = get_users(['role' => 'administrator', 'number' => 1])[0] ?? null;
+    wp_set_current_user($administrator?->ID ?? 0);
+    $admin = rest_do_request(new WP_REST_Request('GET', '/wp/v2/users'));
+    wp_set_current_user(0);
+
+    expect($visitor->get_status())->toBe(401)
+        ->and($visitor->get_data()['code'])->toBe('rest_user_cannot_view')
+        ->and($administrator)->not->toBeNull()
+        ->and($admin->get_status())->toBe(200);
+});
+
+it('leaves the users provider out of the core sitemap', function (): void {
+    (new RestSecurity(true, false))->register(new WordPressHooks);
+
+    expect(apply_filters('wp_sitemaps_add_provider', new stdClass, 'users'))->toBeFalse()
+        ->and(apply_filters('wp_sitemaps_add_provider', 'posts-provider', 'posts'))->toBe('posts-provider');
 });

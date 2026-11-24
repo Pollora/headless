@@ -40,4 +40,21 @@ return [
 
     // Tell search engines not to index the WordPress host (X-Robots-Tag, robots.txt, robots meta).
     'noindex_origin' => true,
+
+    // Who may call the API from a browser. WordPress answers any origin by default; this answers the listed ones only.
+    // The front-end URL is always listed. Without any origin, WordPress's own answer stays.
+    'cors' => [
+        'enabled' => true,
+        // More origins: 'https://www.example.com', or 'https://*.example.com' for every sub-domain.
+        'origins' => [],
+        // Allow cookies and Authorization on cross-origin calls (only for origins you control).
+        'credentials' => false,
+        'max_age' => 600,
+    ],
+
+    // /wp/v2/users answers 401 to a visitor who is not logged in (core lists every author and their login name).
+    'restrict_users' => true,
+
+    // Turn the theme and plugin editors off in the administration (DISALLOW_FILE_EDIT).
+    'disallow_file_edit' => true,
 ];
