@@ -10,3 +10,6 @@
 /.gitignore export-ignore
 /phpstan.neon export-ignore
 /tests export-ignore
+/phpunit.xml.dist export-ignore
+/pint.json export-ignore
+/renovate.json export-ignore
