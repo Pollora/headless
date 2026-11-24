@@ -126,6 +126,13 @@ final class Bootstrap
             $modules[] = new SeoField(SeoProviders::detect(), $seoUrls);
         }
 
+        if ($settings->search && $settings->urls instanceof UrlMapper && $settings->front instanceof Origin) {
+            $searchUrls = $languages->isActive()
+                ? new LanguageUrls($settings->urls, $settings->backend, $settings->front, $settings->languageFronts, $languages)
+                : $settings->urls;
+            $modules[] = new SearchRoutes($searchUrls, $languages, $settings->perPageMax ?? 50);
+        }
+
         if ($settings->blocks) {
             $modules[] = new BlocksField;
         }

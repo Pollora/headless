@@ -68,6 +68,7 @@ final readonly class Settings
         public bool $blocks,
         public bool $seo,
         public ?GraphQlPolicy $graphql,
+        public bool $search,
     ) {}
 
     /**
@@ -134,6 +135,7 @@ final readonly class Settings
             blocks: $front instanceof Origin && self::bool(is_array($config['blocks'] ?? null) ? $config['blocks'] : [], 'enabled', true),
             seo: $front instanceof Origin && self::bool(is_array($config['seo'] ?? null) ? $config['seo'] : [], 'enabled', true),
             graphql: self::graphql($config['graphql'] ?? null),
+            search: $front instanceof Origin && self::bool(is_array($config['search'] ?? null) ? $config['search'] : [], 'enabled', true),
         );
     }
 

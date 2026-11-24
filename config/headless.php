@@ -167,4 +167,11 @@ return [
         'graphiql' => null,
         'restrict_to_logged_in' => null,
     ],
+
+    // The search of the site in one shape: GET /wp-json/headless/v1/search?q=word&type=post,page&lang=fr&page=1&per_page=10, with each
+    // result's address on the front end, its language, a short text and its image. Public content types only, no protected post. The
+    // filter `headless/search/args` changes the WP_Query arguments. Only active once a front-end URL is set.
+    'search' => [
+        'enabled' => true,
+    ],
 ];
