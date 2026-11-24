@@ -138,4 +138,10 @@ return [
         'enabled' => true,
         'cdn_url' => env('HEADLESS_MEDIA_CDN_URL', ''),
     ],
+
+    // The blocks of a post as stable JSON, in the field `headless_blocks` of its REST answer when _fields names it:
+    // /wp-json/wp/v2/posts/12?_fields=id,headless_blocks. Only active once a front-end URL is set.
+    'blocks' => [
+        'enabled' => true,
+    ],
 ];
