@@ -31,4 +31,13 @@ return [
 
     // Turn XML-RPC and the pingback header off.
     'disable_xmlrpc' => true,
+
+    // Answer a feed of the WordPress host with a 404 (the front end publishes its own).
+    'disable_feeds' => true,
+
+    // Turn the core sitemap off: its URLs are the WordPress ones.
+    'disable_sitemaps' => true,
+
+    // Tell search engines not to index the WordPress host (X-Robots-Tag, robots.txt, robots meta).
+    'noindex_origin' => true,
 ];

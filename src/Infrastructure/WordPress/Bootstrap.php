@@ -21,7 +21,7 @@ final class Bootstrap
     {
         // Not static: Brain Monkey binds the callbacks it records, and refuses a static closure
         $start = function (): void {
-            self::boot(SettingsLoader::load(home_url()), new WordPressHooks);
+            self::boot(SettingsLoader::load(home_url(), get_current_blog_id()), new WordPressHooks);
         };
 
         if (did_action('plugins_loaded') > 0) {
@@ -45,10 +45,13 @@ final class Bootstrap
      */
     public static function modules(Settings $settings): array
     {
-        $modules = [new CleanUp($settings->cleanHead, $settings->disableXmlRpc)];
+        $modules = [
+            new CleanUp($settings->cleanHead, $settings->disableXmlRpc),
+            new PublicSurface($settings->disableFeeds, $settings->disableSitemaps, $settings->noindexOrigin),
+        ];
 
         if ($settings->gate->isActive()) {
-            $modules[] = new TemplateRedirectGate($settings->gate);
+            $modules[] = new TemplateRedirectGate($settings->gate, null, $settings->basePath);
         }
 
         return $modules;

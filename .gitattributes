@@ -13,3 +13,4 @@
 /phpunit.xml.dist export-ignore
 /pint.json export-ignore
 /renovate.json export-ignore
+/phpunit.integration.xml export-ignore

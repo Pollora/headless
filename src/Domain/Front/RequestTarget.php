@@ -19,12 +19,22 @@ final readonly class RequestTarget
         $this->path = '/'.ltrim($path, '/');
     }
 
-    /** Builds the target from a request URI such as "/blog/hello?x=1". */
-    public static function fromUri(string $uri, string $method = 'GET'): self
+    /**
+     * Builds the target from a request URI such as "/blog/hello?x=1".
+     *
+     * @param  string  $basePath  the directory WordPress is installed in ("/wp" for https://example.com/wp): the target is relative to it
+     */
+    public static function fromUri(string $uri, string $method = 'GET', string $basePath = ''): self
     {
         $parts = explode('?', $uri, 2);
+        $path = '/'.ltrim($parts[0], '/');
+        $basePath = '/'.trim($basePath, '/');
 
-        return new self($parts[0], $parts[1] ?? '', strtoupper($method));
+        if ($basePath !== '/' && ($path === $basePath || str_starts_with($path, $basePath.'/'))) {
+            $path = substr($path, strlen($basePath));
+        }
+
+        return new self($path, $parts[1] ?? '', strtoupper($method));
     }
 
     /** The path, with the query string when there is one. */
