@@ -9,4 +9,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 - Head clean-up and XML-RPC switch-off.
 - `UrlMapper`, the single place a WordPress URL becomes a front-end URL.
 - Settings from `HEADLESS_CONFIG` / `HEADLESS_FRONTEND_URL` (WordPress, Bedrock) or `config/headless.php` (Pollora).
+- Public surface: feeds (404), core sitemap off, origin noindex.
+- `wp headless status` and `wp headless theme install [--activate]` (the empty theme WordPress needs).
+- Multisite: per-site settings (`sites`), site context. Sub-directory installs.
+- Integration suite against a real WordPress.
 - mu-plugin loader (`stubs/pollora-headless.php`) and a Pollora service provider discovered by Composer.
