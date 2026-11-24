@@ -64,6 +64,7 @@ final readonly class Settings
         public bool $oldSlugRedirects,
         public bool $mediaRoutes,
         public ?string $mediaCdn,
+        public bool $blocks,
     ) {}
 
     /**
@@ -127,6 +128,7 @@ final readonly class Settings
             oldSlugRedirects: self::bool(is_array($config['redirects'] ?? null) ? $config['redirects'] : [], 'old_slugs', true),
             mediaRoutes: $front instanceof Origin && self::bool($media, 'enabled', true),
             mediaCdn: self::mediaCdn($media),
+            blocks: $front instanceof Origin && self::bool(is_array($config['blocks'] ?? null) ? $config['blocks'] : [], 'enabled', true),
         );
     }
 

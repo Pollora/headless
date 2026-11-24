@@ -109,6 +109,10 @@ final class Bootstrap
             $modules[] = new RedirectRoutes(new RedirectCatalog([new OptionRedirectStore, ...($settings->oldSlugRedirects ? [new OldSlugRedirects($urls)] : [])]));
         }
 
+        if ($settings->blocks) {
+            $modules[] = new BlocksField;
+        }
+
         if ($settings->mediaRoutes) {
             $modules[] = new MediaRoutes(new NormalizedMedia);
         }
