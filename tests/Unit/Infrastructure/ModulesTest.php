@@ -119,7 +119,7 @@ it('drops the pingback header and keeps the others', function (): void {
 it('builds the gate and the clean-up from the settings and attaches them', function (): void {
     $settings = Settings::fromArray(['frontend_url' => 'https://www.example.com'], 'https://cms.example.com');
 
-    expect(Bootstrap::modules($settings))->toHaveCount(7);
+    expect(Bootstrap::modules($settings))->toHaveCount(8);
 
     Actions\expectAdded('template_redirect')->once();
     Actions\expectAdded('rest_api_init')->once();
@@ -139,7 +139,7 @@ it('builds the gate and the clean-up from the settings and attaches them', funct
 it('hooks no gate when the front is left as it is', function (): void {
     $settings = Settings::fromArray([], 'https://cms.example.com');
 
-    expect(Bootstrap::modules($settings))->toHaveCount(3);
+    expect(Bootstrap::modules($settings))->toHaveCount(4);
 
     Actions\expectAdded('template_redirect')->never();
     Actions\expectAdded('rest_api_init')->never();

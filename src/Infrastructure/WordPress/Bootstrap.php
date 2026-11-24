@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Pollora\Headless\Infrastructure\WordPress;
 
+use Pollora\Headless\Application\Token\TokenService;
 use Pollora\Headless\Domain\Cache\RestCachePolicy;
 use Pollora\Headless\Domain\Content\ContentLinks;
 use Pollora\Headless\Domain\Cors\CorsPolicy;
@@ -61,6 +62,10 @@ final class Bootstrap
 
         if ($settings->cors instanceof CorsPolicy) {
             $modules[] = new Cors($settings->cors);
+        }
+
+        if ($settings->apiTokens) {
+            $modules[] = new TokenAuthentication(new TokenService(new UserMetaTokenStore));
         }
 
         if ($settings->restCache instanceof RestCachePolicy || $settings->perPageMax !== null) {
