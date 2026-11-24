@@ -25,4 +25,5 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 - Redirects: rules managed with `wp headless redirect`, the old slugs of renamed posts, `GET /wp-json/headless/v1/redirects` and `/redirects/resolve`.
 - Media: `GET /wp-json/headless/v1/media/{id}` (one shape for every kind, with the focal point of `pollora/media`), the `headless_featured_media` field, and `media.cdn_url` to serve the uploads from a CDN.
 - Blocks as stable JSON: the field `headless_blocks` of a post, when `_fields` names it.
+- SEO metadata in one shape (`headless_seo` on posts and terms) from Yoast SEO, Rank Math, All in One SEO and SEOPress, with every address on the front end; the redirections of Rank Math join the site's redirects.
 - mu-plugin loader (`stubs/pollora-headless.php`) and a Pollora service provider discovered by Composer.

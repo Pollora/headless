@@ -2,7 +2,7 @@
 
 Prepare WordPress for headless mode: lock the public front, remove what a headless site does not use, and (in the releases to come) secure and speed up the API, preview drafts from a JS front end and tell it when content changes.
 
-> **Status: `0.5`, not released.** The front gate and clean-up (0.1), CORS, REST security and speed, front-end links, multilingual sites and API tokens (0.2), the preview of drafts (0.3), the notifications of changes (0.4) and the normalised content (site manifest, redirects, media, blocks: 0.5) are in. The API may change until `1.0`. The roadmap below says what comes next; the API may change until `1.0`.
+> **Status: `0.6`, not released.** The front gate and clean-up (0.1), CORS, REST security and speed, front-end links, multilingual sites and API tokens (0.2), the preview of drafts (0.3), the notifications of changes (0.4) the normalised content (site manifest, redirects, media, blocks: 0.5) and the SEO metadata (0.6) are in. The API may change until `1.0`. The roadmap below says what comes next; the API may change until `1.0`.
 
 It works on a classic WordPress, on Bedrock and inside a [Pollora](https://pollora.dev) project, with the same core. Any Node application can use it: the contract is plain HTTP, no client library is needed.
 
@@ -27,6 +27,7 @@ It works on a classic WordPress, on Bedrock and inside a [Pollora](https://pollo
 | Redirects | The redirects of the site for a front end: the ones you manage (`wp headless redirect add /old/ /new/`, patterns, 410 for a page that is gone) and the old addresses WordPress remembers for renamed posts, at `GET /wp-json/headless/v1/redirects` (every rule) and `/redirects/resolve?path=/old/` (one path). |
 | Media | A file of the library in one shape whatever its kind (`GET /wp-json/headless/v1/media/{id}`: url, sizes, srcset, alt, caption, the focal point set with `pollora/media`), the featured image of a post in full without a second request, and the uploads served from a CDN. |
 | Blocks | The blocks of a post as JSON that does not change shape: `?_fields=id,headless_blocks`. See [Blocks](#blocks-as-json). |
+| SEO | The search and social metadata of a post or a term in one shape whichever plugin runs (Yoast SEO, Rank Math, All in One SEO, SEOPress), with every address on the front end: `?_fields=id,headless_seo`. See [SEO](#seo-metadata). |
 | URL mapper | `UrlMapper::toFront()` turns a URL of the WordPress site into the URL of the same page on the front end. It is the one place every URL the package hands out goes through. |
 
 Nothing changes on the public site until you set the front-end URL: a site that is not told where its front end lives is never locked.
@@ -200,9 +201,30 @@ post.headless_blocks;
 
 Every block has the same keys in the same order. `id` is its position (`1.0` is the first block inside the second): a key for a list. `attributes` are those of the block comment, completed with the defaults of the block type, `{}` when there are none; a value a block takes from its HTML (the text of a paragraph) is in `html`. `html` is the block's own HTML; `rendered` is what WordPress prints for it, inner blocks included, and is present on top-level blocks and on dynamic blocks (a list of posts has no HTML of its own). Text outside blocks (classic content) is one `core/freeform` block. A post with a password gives `null`. The field is computed only when `_fields` names it. It is not in the preview answer.
 
+## SEO metadata
+
+```js
+const post = await (await fetch('https://cms.example.com/wp-json/wp/v2/posts/12?_fields=id,headless_seo')).json();
+post.headless_seo;
+// { source: 'yoast', title, description, robots: { index: true, follow: true, directives: ['max-image-preview:large'] }, canonical,
+//   open_graph: { type, title, description, url, site_name, locale, images: [{ url, width, height, alt }] },
+//   twitter: { card, title, description, image, site, creator }, json_ld: [ …nodes of the structured data graph ], breadcrumbs: [{ label, url }] }
+```
+
+The keys are the same whichever plugin gave them, and `null` when it has nothing. Every address (canonical, `og:url`, images, the `@id` and `url` of the structured data, the breadcrumbs) is moved from the WordPress host to your front end, which the plugins do not do. The same field is on terms (`/wp/v2/categories/5?_fields=id,headless_seo`). It is computed only when `_fields` names it.
+
+| Plugin | Read from | Verified |
+| --- | --- | --- |
+| Yoast SEO | its `yoast_head_json` REST field | against the real plugin, in CI |
+| Rank Math | its `/rankmath/v1/getHead` route (turn on *Headless Support* in its general settings) | not run against the plugin: unit tests on the head it prints |
+| All in One SEO | its `aioseo_head_json` REST field | not run against the plugin: unit tests, read from its documentation |
+| SEOPress | its `/seopress/v1/posts/{id}` and `/terms/{id}` routes | not run against the plugin: unit tests |
+
+The Rank Math redirections of its manager (exact and pattern ones) join the [redirects](#redirects) of the site. The redirections of Yoast Premium, All in One SEO Pro and SEOPress are not read yet, and The SEO Framework is not supported yet.
+
 ## Roadmap
 
-`0.1` core · `0.2` CORS, REST security and speed, URL mapping, Polylang and WPML, API tokens · `0.3` content preview · `0.4` revalidation webhooks · `0.5` site manifest, redirects, media, blocks as JSON (this release) · `0.6` SEO (Yoast, Rank Math, AIOSEO, SEOPress, The SEO Framework) · `0.7` optional WPGraphQL, schema snapshots, forms and search · `0.8` doctor, end-to-end tests · `1.0` frozen contract.
+`0.1` core · `0.2` CORS, REST security and speed, URL mapping, Polylang and WPML, API tokens · `0.3` content preview · `0.4` revalidation webhooks · `0.5` site manifest, redirects, media, blocks as JSON · `0.6` SEO: Yoast, Rank Math, AIOSEO, SEOPress (this release) · `0.7` optional WPGraphQL, schema snapshots, forms and search · `0.8` doctor, end-to-end tests · `1.0` frozen contract.
 
 ## Quality
 

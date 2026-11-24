@@ -144,4 +144,12 @@ return [
     'blocks' => [
         'enabled' => true,
     ],
+
+    // The search and social metadata of a post or a term in one shape whichever SEO plugin runs (Yoast SEO, Rank Math, All in One SEO,
+    // SEOPress), in the field `headless_seo` of its REST answer when _fields names it, with every address on the front end:
+    // /wp-json/wp/v2/posts/12?_fields=id,headless_seo. Rank Math needs "Headless Support" on in its general settings; its redirections
+    // join the redirects of the site. Only active once a front-end URL is set.
+    'seo' => [
+        'enabled' => true,
+    ],
 ];
