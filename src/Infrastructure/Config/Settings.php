@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Pollora\Headless\Infrastructure\Config;
 
+use Pollora\Headless\Domain\Cors\CorsPolicy;
 use Pollora\Headless\Domain\Front\AllowList;
 use Pollora\Headless\Domain\Front\FrontGatePolicy;
 use Pollora\Headless\Domain\Front\FrontMode;
@@ -33,6 +34,9 @@ final readonly class Settings
         public bool $disableFeeds,
         public bool $disableSitemaps,
         public bool $noindexOrigin,
+        public ?CorsPolicy $cors,
+        public bool $restrictUsers,
+        public bool $disallowFileEdit,
     ) {}
 
     /**
@@ -71,7 +75,36 @@ final readonly class Settings
             disableFeeds: self::bool($config, 'disable_feeds', true),
             disableSitemaps: self::bool($config, 'disable_sitemaps', true),
             noindexOrigin: self::bool($config, 'noindex_origin', true),
+            cors: self::cors($config['cors'] ?? [], $front),
+            restrictUsers: self::bool($config, 'restrict_users', true),
+            disallowFileEdit: self::bool($config, 'disallow_file_edit', true),
         );
+    }
+
+    /**
+     * The CORS policy, or null when no origin is allowed (the front-end URL counts): then WordPress's own answer stays.
+     */
+    private static function cors(mixed $config, ?Origin $front): ?CorsPolicy
+    {
+        $config = is_array($config) ? $config : [];
+
+        if (! self::bool($config, 'enabled', true)) {
+            return null;
+        }
+
+        $origins = self::strings($config, 'origins');
+
+        if ($front instanceof Origin) {
+            $origins[] = $front->toString();
+        }
+
+        $policy = new CorsPolicy(
+            array_values(array_unique($origins)),
+            self::bool($config, 'credentials', false),
+            maxAge: self::int($config, 'max_age', 600),
+        );
+
+        return $policy->hasOrigins() ? $policy : null;
     }
 
     private static function mode(string $value, bool $hasFront): FrontMode

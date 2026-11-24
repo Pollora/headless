@@ -3,6 +3,12 @@
 declare(strict_types=1);
 
 use Brain\Monkey;
+use Pollora\Headless\Tests\Fixtures\FakeWpError;
+
+// The unit suite has no WordPress: WP_Error is a small stand-in
+if (! class_exists('WP_Error', false)) {
+    class_alias(FakeWpError::class, 'WP_Error');
+}
 
 /*
 |--------------------------------------------------------------------------
