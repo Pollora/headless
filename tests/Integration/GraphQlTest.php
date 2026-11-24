@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
+use GraphQL\Utils\SchemaPrinter;
 use Pollora\Headless\Application\Token\TokenService;
 use Pollora\Headless\Domain\Cors\CorsPolicy;
 use Pollora\Headless\Domain\GraphQl\GraphQlPolicy;
+use Pollora\Headless\Domain\Schema\OpenApiBuilder;
 use Pollora\Headless\Domain\Token\TokenScope;
 use Pollora\Headless\Infrastructure\WordPress\GraphQl;
 use Pollora\Headless\Infrastructure\WordPress\TokenAuthentication;
@@ -128,4 +130,19 @@ it('logs an API token in on GraphQL and keeps a read token from running a mutati
     expect($created[0][0])->toBe(1)
         ->and($created[0][1]['errors'][0]['message'] ?? '')->toContain('not allowed')
         ->and($created[1][1]['data']['createPost']['post']['databaseId'] ?? null)->not->toBeNull();
+});
+
+it('describes the real REST API as an OpenAPI document', function (): void {
+    $document = (new OpenApiBuilder('Site', '1', rest_url(), ['wp/v2']))->build(rest_get_server()->get_routes());
+
+    expect($document['paths'])->toHaveKey('/wp/v2/posts/{id}')
+        ->and($document['paths']['/wp/v2/posts']['get']['parameters'])->not->toBeEmpty()
+        ->and($document['paths']['/wp/v2/posts']['post']['requestBody'])->toHaveKey('content')
+        ->and(json_encode($document))->toBeString();
+});
+
+it('prints the real GraphQL schema as SDL', function (): void {
+    $sdl = SchemaPrinter::doPrint(WPGraphQL::get_schema());
+
+    expect($sdl)->toContain('type RootQuery')->and($sdl)->toContain('type Post ');
 });
