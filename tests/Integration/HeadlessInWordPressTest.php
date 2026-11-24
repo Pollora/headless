@@ -215,12 +215,19 @@ it('points the permalinks, the REST link and the links of the content to the fro
 it('marks a public REST answer as cacheable, and not a logged-in one', function (): void {
     (new RestPerformance(new RestCachePolicy, null))->register(new WordPressHooks);
 
+    // rest_post_dispatch runs in WP_REST_Server::serve_request(), after dispatch(): apply it as the server does
+    $answer = static function (): WP_HTTP_Response {
+        $request = new WP_REST_Request('GET', '/wp/v2/posts');
+
+        return apply_filters('rest_post_dispatch', rest_do_request($request), rest_get_server(), $request);
+    };
+
     wp_set_current_user(0);
-    $public = rest_do_request(new WP_REST_Request('GET', '/wp/v2/posts'));
+    $public = $answer();
 
     $administrator = get_users(['role' => 'administrator', 'number' => 1])[0];
     wp_set_current_user($administrator->ID);
-    $private = rest_do_request(new WP_REST_Request('GET', '/wp/v2/posts'));
+    $private = $answer();
     wp_set_current_user(0);
 
     expect($public->get_headers()['Cache-Control'] ?? '')->toStartWith('public, max-age=60')
