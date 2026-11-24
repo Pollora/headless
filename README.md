@@ -2,7 +2,7 @@
 
 Prepare WordPress for headless mode: lock the public front, remove what a headless site does not use, and (in the releases to come) secure and speed up the API, preview drafts from a JS front end and tell it when content changes.
 
-> **Status: `0.1` skeleton, not released.** Only the front gate and the head clean-up are in. The roadmap below says what comes next; the API may change until `1.0`.
+> **Status: `0.1`, not released.** The front gate, the clean-up, the public surface, the status command and the empty theme are in. The roadmap below says what comes next; the API may change until `1.0`.
 
 It works on a classic WordPress, on Bedrock and inside a [Pollora](https://pollora.dev) project, with the same core. Any Node application can use it: the contract is plain HTTP, no client library is needed.
 
@@ -12,6 +12,9 @@ It works on a classic WordPress, on Bedrock and inside a [Pollora](https://pollo
 | --- | --- |
 | Front gate | A request for a public page is redirected to the same path on your front end (302 by default), answered with a holding page, or with JSON. The administration, the login, `/wp-json`, `/graphql`, the cron, the uploads, `xmlrpc.php`, the sitemap and `robots.txt` are never touched; you add more with `allow`. |
 | Head clean-up | Removes the generator, RSD, shortlink, feeds, emoji, oEmbed and REST discovery from the page head and the headers, and turns XML-RPC and the pingback header off. |
+| Public surface | Feeds answer 404, the core sitemap is off (its URLs are WordPress's), and the WordPress host tells search engines not to index it (`X-Robots-Tag`, `robots.txt`, robots meta). |
+| Empty theme | `wp headless theme install --activate` installs the one empty theme WordPress needs: without a valid theme it falls into recovery mode for administrators. |
+| Status | `wp headless status` shows the setup and what looks wrong (no front URL, a front on the same host, no theme, WP-Cron). |
 | URL mapper | `UrlMapper::toFront()` turns a URL of the WordPress site into the URL of the same page on the front end. It is the one place every URL the package hands out goes through. |
 
 Nothing changes on the public site until you set the front-end URL: a site that is not told where its front end lives is never locked.
@@ -32,7 +35,7 @@ define('HEADLESS_FRONTEND_URL', 'https://www.example.com');
 define('HEADLESS_CONFIG', ['frontend_url' => 'https://www.example.com', 'redirect_status' => 302, 'allow' => ['/wc-api']]);
 ```
 
-`config/headless.php` lists every option with its default.
+`config/headless.php` lists every option with its default. On a multisite network, give one site its own settings with `'sites' => [2 => ['frontend_url' => 'https://blog.example.com']]` in `HEADLESS_CONFIG`. WordPress installed in a sub-directory (`https://example.com/wp`) works: the gate reads paths relative to it.
 
 ## Roadmap
 
