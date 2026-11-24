@@ -60,6 +60,8 @@ final readonly class Settings
         public int $revalidationAttempts,
         public array $revalidationOptions,
         public bool $manifest,
+        public bool $redirects,
+        public bool $oldSlugRedirects,
     ) {}
 
     /**
@@ -118,6 +120,8 @@ final readonly class Settings
             revalidationAttempts: min(5, max(1, self::int($revalidation, 'max_attempts', 5))),
             revalidationOptions: array_values(array_unique([...ChangeWatcher::defaultOptions(), ...self::strings($revalidation, 'options')])),
             manifest: $front instanceof Origin && self::bool(is_array($config['manifest'] ?? null) ? $config['manifest'] : [], 'enabled', true),
+            redirects: $front instanceof Origin && self::bool(is_array($config['redirects'] ?? null) ? $config['redirects'] : [], 'enabled', true),
+            oldSlugRedirects: self::bool(is_array($config['redirects'] ?? null) ? $config['redirects'] : [], 'old_slugs', true),
         );
     }
 

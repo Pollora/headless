@@ -24,6 +24,7 @@ It works on a classic WordPress, on Bedrock and inside a [Pollora](https://pollo
 | Preview | The editor's Preview button opens your front end with a one-time token; the front end trades it for a session and reads the draft, scheduled or private post, with the editor's latest autosave laid over it. See [Preview](#preview-from-your-front-end). |
 | Revalidation | When a post is published, updated, unpublished or deleted, or a term, a menu, a site option or a file changes, the front end is told: one signed POST, merged with the other changes of the last seconds, sent off the request, tried again if it fails. See [Revalidation](#telling-your-front-end-what-changed). |
 | Site manifest | `GET /wp-json/headless/v1/site`: the site and its languages, the menus as trees with front-end paths, the menu locations, the front page and the content types with their REST routes, in one public, cacheable answer. |
+| Redirects | The redirects of the site for a front end: the ones you manage (`wp headless redirect add /old/ /new/`, patterns, 410 for a page that is gone) and the old addresses WordPress remembers for renamed posts, at `GET /wp-json/headless/v1/redirects` (every rule) and `/redirects/resolve?path=/old/` (one path). |
 | URL mapper | `UrlMapper::toFront()` turns a URL of the WordPress site into the URL of the same page on the front end. It is the one place every URL the package hands out goes through. |
 
 Nothing changes on the public site until you set the front-end URL: a site that is not told where its front end lives is never locked.
@@ -150,6 +151,26 @@ site.post_types;  // [{ name: 'post', rest_base: 'posts', rest_namespace: 'wp/v2
 ```
 
 `path` is the address on your front end (`null` for a link to another site). The answer is the same until the site changes, so it carries an `ETag`; revalidate it on the `menus`, `options` and `site:<id>` tags of the [notifications](#telling-your-front-end-what-changed).
+
+## Redirects
+
+```bash
+wp headless redirect add /old-page/ /new-page/                       # 301 by default
+wp headless redirect add '/blog/(\d{4})/(.*)' '/news/$1/$2' --regex   # a pattern, matched against the whole path
+wp headless redirect add /discontinued/ --status=410                 # a page that is gone
+wp headless redirect list      # every rule, from every source
+wp headless redirect test /blog/2024/hello
+```
+
+```js
+// at build or start time: every rule, to feed your framework's redirects
+const { redirects } = await (await fetch('https://cms.example.com/wp-json/headless/v1/redirects')).json();
+// or, in a middleware, one path (a 200 either way, so a CDN can keep the answer)
+const { redirect } = await (await fetch(`https://cms.example.com/wp-json/headless/v1/redirects/resolve?path=${encodeURIComponent(pathname)}`)).json();
+// redirect: null | { from, to, status, source: 'manual' | 'old-slug' }
+```
+
+An exact rule wins over a pattern, and the rules you write win over the old slugs. A rule is checked when it is made (a path, a destination that is a path or an absolute http(s) URL, a status of 301, 302, 307, 308 or 410, a pattern that compiles, no loop). Changing the rules is announced to the front end with the `option:headless_redirects` tag.
 
 ## Roadmap
 
