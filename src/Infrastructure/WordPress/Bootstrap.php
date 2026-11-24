@@ -13,6 +13,7 @@ use Pollora\Headless\Domain\Front\Origin;
 use Pollora\Headless\Domain\Front\UrlMapper;
 use Pollora\Headless\Domain\Language\Languages;
 use Pollora\Headless\Domain\Language\LanguageUrls;
+use Pollora\Headless\Domain\Media\MediaUrls;
 use Pollora\Headless\Infrastructure\Config\Settings;
 use Pollora\Headless\Infrastructure\Config\SettingsLoader;
 use Pollora\Headless\Infrastructure\Language\LanguagesFactory;
@@ -106,6 +107,14 @@ final class Bootstrap
                 ? new LanguageUrls($settings->urls, $settings->backend, $settings->front, $settings->languageFronts, $languages)
                 : $settings->urls;
             $modules[] = new RedirectRoutes(new RedirectCatalog([new OptionRedirectStore, ...($settings->oldSlugRedirects ? [new OldSlugRedirects($urls)] : [])]));
+        }
+
+        if ($settings->mediaRoutes) {
+            $modules[] = new MediaRoutes(new NormalizedMedia);
+        }
+
+        if ($settings->mediaCdn !== null) {
+            $modules[] = new MediaCdn(new MediaUrls((string) (wp_upload_dir(null, false)['baseurl'] ?? ''), $settings->mediaCdn));
         }
 
         if ($settings->restCache instanceof RestCachePolicy || $settings->perPageMax !== null) {
