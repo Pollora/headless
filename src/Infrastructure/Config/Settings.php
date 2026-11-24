@@ -47,6 +47,10 @@ final readonly class Settings
         public bool $rewriteContentLinks,
         public array $languageFronts,
         public bool $apiTokens,
+        public ?string $previewUrl,
+        public ?string $previewSecret,
+        public int $previewLinkTtl,
+        public int $previewSessionTtl,
     ) {}
 
     /**
@@ -56,6 +60,7 @@ final readonly class Settings
     public static function fromArray(array $config, string $backendUrl): self
     {
         $backend = Origin::fromUrl($backendUrl);
+        $preview = is_array($config['preview'] ?? null) ? $config['preview'] : [];
         $frontUrl = self::string($config, 'frontend_url');
         $front = $frontUrl === '' ? null : Origin::fromUrl($frontUrl);
 
@@ -94,6 +99,10 @@ final readonly class Settings
             rewriteContentLinks: self::bool($config, 'rewrite_content_links', true),
             languageFronts: self::languageFronts($config['frontend_urls'] ?? []),
             apiTokens: self::bool(is_array($config['tokens'] ?? null) ? $config['tokens'] : [], 'enabled', true),
+            previewUrl: self::previewUrl($preview, $front),
+            previewSecret: self::string($preview, 'secret') !== '' ? self::string($preview, 'secret') : null,
+            previewLinkTtl: max(30, self::int($preview, 'link_ttl', 300)),
+            previewSessionTtl: max(60, self::int($preview, 'session_ttl', 1800)),
         );
     }
 
@@ -166,6 +175,22 @@ final readonly class Settings
         }
 
         return $fronts;
+    }
+
+    /**
+     * Where the front end handles previews, or null when previews are off or there is no front end.
+     *
+     * @param  array<string, mixed>  $config
+     */
+    private static function previewUrl(array $config, ?Origin $front): ?string
+    {
+        if (! $front instanceof Origin || ! self::bool($config, 'enabled', true)) {
+            return null;
+        }
+
+        $url = self::string($config, 'url', '/api/preview');
+
+        return str_starts_with($url, '/') ? $front->toString().$url : Origin::fromUrl($url)->toString().parse_url($url, PHP_URL_PATH);
     }
 
     private static function mode(string $value, bool $hasFront): FrontMode

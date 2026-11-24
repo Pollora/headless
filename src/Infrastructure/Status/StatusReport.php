@@ -36,6 +36,7 @@ final readonly class StatusReport
             ['Front-end URL', $settings->front?->toString() ?? 'not set'],
             ['Front gate', $settings->mode === FrontMode::Redirect ? sprintf('redirect (%d)', $settings->redirectStatus->value) : $settings->mode->value],
             ['Languages', $languages instanceof Languages && $languages->isActive() ? $languages->plugin().' ('.implode(', ', $languages->all()).')' : 'single language'],
+            ['Preview', $settings->previewUrl ?? 'off'],
             ['Head clean-up', self::onOff($settings->cleanHead)],
             ['XML-RPC', $settings->disableXmlRpc ? 'off' : 'on'],
             ['Feeds', $settings->disableFeeds ? 'off' : 'on'],

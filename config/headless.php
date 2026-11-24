@@ -84,4 +84,18 @@ return [
     'tokens' => [
         'enabled' => true,
     ],
+
+    // Preview of drafts, scheduled and private posts from the front end. Only active once a front-end URL is set.
+    // The editor's Preview button opens `url` with a token that works once, for five minutes; the front end trades it
+    // at POST /wp-json/headless/v1/preview/exchange for a session and reads GET /wp-json/headless/v1/preview/posts/{id}.
+    'preview' => [
+        'enabled' => true,
+        // Where the front end handles it: a path on the front end, or a full URL.
+        'url' => '/api/preview',
+        // Seconds: the link in the editor, and the session the front end holds.
+        'link_ttl' => 300,
+        'session_ttl' => 1800,
+        // The key that signs the tokens. Empty: derived from the WordPress salts. Set HEADLESS_PREVIEW_SECRET to share one across servers.
+        'secret' => env('HEADLESS_PREVIEW_SECRET', ''),
+    ],
 ];

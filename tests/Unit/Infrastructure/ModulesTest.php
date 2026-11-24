@@ -117,12 +117,14 @@ it('drops the pingback header and keeps the others', function (): void {
 });
 
 it('builds the gate and the clean-up from the settings and attaches them', function (): void {
+    Functions\when('wp_salt')->justReturn('salt');
     $settings = Settings::fromArray(['frontend_url' => 'https://www.example.com'], 'https://cms.example.com');
 
-    expect(Bootstrap::modules($settings))->toHaveCount(8);
+    expect(Bootstrap::modules($settings))->toHaveCount(10);
 
     Actions\expectAdded('template_redirect')->once();
-    Actions\expectAdded('rest_api_init')->once();
+    Actions\expectAdded('rest_api_init')->twice();
+    Filters\expectAdded('preview_post_link')->once();
     Filters\expectAdded('rest_pre_dispatch')->once();
     Filters\expectAdded('rest_post_dispatch')->once();
     Filters\expectAdded('rest_pre_serve_request')->once();
