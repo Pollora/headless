@@ -2,15 +2,19 @@
 
 declare(strict_types=1);
 
+use Pollora\Headless\Application\Revalidation\Revalidator;
 use Pollora\Headless\Application\Token\TokenService;
 use Pollora\Headless\Infrastructure\Config\Settings;
 use Pollora\Headless\Infrastructure\Config\SettingsLoader;
 use Pollora\Headless\Infrastructure\Language\LanguagesFactory;
+use Pollora\Headless\Infrastructure\Revalidation\ActionSchedulerScheduler;
+use Pollora\Headless\Infrastructure\Revalidation\RevalidatorFactory;
 use Pollora\Headless\Infrastructure\Status\StatusReport;
 use Pollora\Headless\Infrastructure\WordPress\SiteContext;
 use Pollora\Headless\Infrastructure\WordPress\StubTheme;
 use Pollora\Headless\Infrastructure\WordPress\UserMetaTokenStore;
 use Pollora\Headless\Infrastructure\WpCli\HeadlessCommand;
+use Pollora\Headless\Infrastructure\WpCli\RevalidateCommand;
 use Pollora\Headless\Infrastructure\WpCli\TokenCommand;
 use Pollora\Headless\Infrastructure\WpCli\WpCliOutput;
 
@@ -30,6 +34,7 @@ if (defined('WP_CLI') && WP_CLI && class_exists('WP_CLI')) {
             wp_get_theme()->exists(),
             defined('DISABLE_WP_CRON') && DISABLE_WP_CRON,
             LanguagesFactory::detect(),
+            ActionSchedulerScheduler::actionSchedulerIsReady(),
         ),
         static fn (): StubTheme => new StubTheme(get_theme_root(), dirname(__DIR__, 3).'/resources/theme'),
         static function (string $slug): void {
@@ -37,6 +42,11 @@ if (defined('WP_CLI') && WP_CLI && class_exists('WP_CLI')) {
         },
         new WpCliOutput,
     ));
+    WP_CLI::add_command('headless revalidate ping', new RevalidateCommand(
+        static fn (): Revalidator => RevalidatorFactory::fromSettings($settings()),
+        new WpCliOutput,
+    ));
+
     WP_CLI::add_command('headless token', new TokenCommand(
         new TokenService(new UserMetaTokenStore),
         static function (string $who): ?int {

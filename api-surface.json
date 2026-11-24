@@ -1,6 +1,8 @@
 {
     "version": 1,
     "surface": {
-        "config:headless": "unreadable without the application"
+        "config:headless": "unreadable without the application",
+        "hook:pollora/headless/flush": "hook",
+        "hook:pollora/headless/retry": "hook"
     }
 }

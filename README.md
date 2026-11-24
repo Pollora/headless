@@ -2,7 +2,7 @@
 
 Prepare WordPress for headless mode: lock the public front, remove what a headless site does not use, and (in the releases to come) secure and speed up the API, preview drafts from a JS front end and tell it when content changes.
 
-> **Status: `0.3`, not released.** The front gate and clean-up (0.1), CORS, REST security and speed, front-end links, multilingual sites and API tokens (0.2), and the preview of drafts (0.3) are in. The API may change until `1.0`. The roadmap below says what comes next; the API may change until `1.0`.
+> **Status: `0.4`, not released.** The front gate and clean-up (0.1), CORS, REST security and speed, front-end links, multilingual sites and API tokens (0.2), the preview of drafts (0.3) and the notifications of changes (0.4) are in. The API may change until `1.0`. The roadmap below says what comes next; the API may change until `1.0`.
 
 It works on a classic WordPress, on Bedrock and inside a [Pollora](https://pollora.dev) project, with the same core. Any Node application can use it: the contract is plain HTTP, no client library is needed.
 
@@ -22,6 +22,7 @@ It works on a classic WordPress, on Bedrock and inside a [Pollora](https://pollo
 | Languages | Polylang and WPML: each language may have its own front end (`frontend_urls`), and a post is mapped with its own language. (WPML is closed source: unit-tested only.) |
 | API tokens | `wp headless token create <user> --scopes=read --routes=/wp/v2/posts --expires=90d`: `Authorization: Bearer hl.…`, as the user, limited to read or write and to route prefixes. Only a hash is stored; a wrong token answers 401, a request outside the scopes 403. `rotate` keeps the old token alive for a grace period. |
 | Preview | The editor's Preview button opens your front end with a one-time token; the front end trades it for a session and reads the draft, scheduled or private post, with the editor's latest autosave laid over it. See [Preview](#preview-from-your-front-end). |
+| Revalidation | When a post is published, updated, unpublished or deleted, or a term, a menu, a site option or a file changes, the front end is told: one signed POST, merged with the other changes of the last seconds, sent off the request, tried again if it fails. See [Revalidation](#telling-your-front-end-what-changed). |
 | URL mapper | `UrlMapper::toFront()` turns a URL of the WordPress site into the URL of the same page on the front end. It is the one place every URL the package hands out goes through. |
 
 Nothing changes on the public site until you set the front-end URL: a site that is not told where its front end lives is never locked.
@@ -75,9 +76,72 @@ const data = await preview.json(); // the post as WordPress's REST API gives it,
 - Every read checks that the user can still edit the post, so removing their right ends the session at once.
 - The signing key is derived from the WordPress salts; set `HEADLESS_SECRET` (or `HEADLESS_PREVIEW_SECRET` on Pollora) to share one between servers.
 
+## Telling your front end what changed
+
+Add a target and a secret you share with your front end:
+
+```php
+define('HEADLESS_REVALIDATE_URL', 'https://www.example.com/api/revalidate');
+define('HEADLESS_REVALIDATE_SECRET', 'a long random string');
+// several targets, a debounce or more options to watch: 'revalidation' in config/headless.php
+```
+
+`wp headless revalidate ping` sends a signed `ping` to every target and says how each one answered.
+
+**What is sent.** A change is stored when it happens and sent about three seconds later, merged with the others of those seconds (an import of 500 posts is a few notifications, not 500). It is sent by [Action Scheduler](https://actionscheduler.org) when it is loaded (WooCommerce ships it) and by WP-Cron otherwise, which runs only when a page is visited: run a system cron on a production site. A target that does not answer 2xx is tried again after 30 seconds, 2 minutes, 10 minutes and 1 hour, with the same delivery ID, then given up (a line in the PHP error log).
+
+```json
+{
+  "id": "5f0c1a…",
+  "sent_at": 1767225600,
+  "truncated": false,
+  "events": [
+    { "event": "post.published", "tags": ["post:12", "type:post", "site:1", "term:5"], "urls": ["https://www.example.com/hello/"],
+      "post": { "id": 12, "type": "post", "slug": "hello", "old_slug": null, "status_from": "draft", "status_to": "publish" },
+      "site": 1, "locale": "en_US" }
+  ],
+  "tags": ["post:12", "type:post", "site:1", "term:5"],
+  "urls": ["https://www.example.com/hello/"],
+  "paths": ["/hello/"]
+}
+```
+
+Events: `post.published`, `post.updated`, `post.unpublished` (draft, trash, private), `post.deleted`, `term.changed`, `menu.changed`, `options.changed`, `media.changed`. A draft that is saved tells nobody. `urls` are on the front end (the address the post has now, and the one it had). `locale` is the language of the post when Polylang or WPML is active. `truncated: true` means more than 200 tags or URLs changed: revalidate everything.
+
+**Check it.** Every request carries `X-Headless-Signature: sha256=<hex>`, the HMAC-SHA256 of `<timestamp>.<raw body>` with your secret, and `X-Headless-Timestamp`. Reject a request older than five minutes, compare in constant time, and ignore a delivery ID you have already handled (`X-Headless-Delivery`: a retry has the same one).
+
+```js
+// Next.js: app/api/revalidate/route.js
+import crypto from 'node:crypto';
+import { revalidatePath, revalidateTag } from 'next/cache';
+
+const seen = new Set(); // use a shared store (Redis, KV) with several instances
+
+export async function POST(request) {
+  const body = await request.text(); // the RAW body: sign what was sent, not what you parsed
+  const timestamp = Number(request.headers.get('x-headless-timestamp'));
+  const signature = request.headers.get('x-headless-signature') ?? '';
+  const expected = 'sha256=' + crypto.createHmac('sha256', process.env.HEADLESS_REVALIDATE_SECRET).update(`${timestamp}.${body}`).digest('hex');
+
+  const valid = Math.abs(Date.now() / 1000 - timestamp) < 300 && signature.length === expected.length
+    && crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
+  if (!valid) return new Response('invalid signature', { status: 401 });
+
+  const payload = JSON.parse(body);
+  if (seen.has(payload.id)) return Response.json({ ok: true, repeated: true });
+  seen.add(payload.id);
+
+  payload.tags.forEach((tag) => revalidateTag(tag, 'max')); // tag your fetches: fetch(url, { next: { tags: ['post:12'] } })
+  payload.paths.forEach((path) => revalidatePath(path));
+  return Response.json({ ok: true });
+}
+```
+
+Nuxt, Astro, SvelteKit or Express work the same way: verify, then purge whatever your framework caches by tag or by path.
+
 ## Roadmap
 
-`0.1` core · `0.2` CORS, REST security and speed, URL mapping, Polylang and WPML, API tokens · `0.3` content preview (this release) · `0.4` revalidation webhooks · `0.5` site manifest, media, blocks as JSON, redirects · `0.6` SEO (Yoast, Rank Math, AIOSEO, SEOPress, The SEO Framework) · `0.7` optional WPGraphQL, schema snapshots, forms and search · `0.8` doctor, end-to-end tests · `1.0` frozen contract.
+`0.1` core · `0.2` CORS, REST security and speed, URL mapping, Polylang and WPML, API tokens · `0.3` content preview · `0.4` revalidation webhooks (this release) · `0.5` site manifest, media, blocks as JSON, redirects · `0.6` SEO (Yoast, Rank Math, AIOSEO, SEOPress, The SEO Framework) · `0.7` optional WPGraphQL, schema snapshots, forms and search · `0.8` doctor, end-to-end tests · `1.0` frozen contract.
 
 ## Quality
 

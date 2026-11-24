@@ -98,4 +98,21 @@ return [
         // The key that signs the tokens. Empty: derived from the WordPress salts. Set HEADLESS_PREVIEW_SECRET to share one across servers.
         'secret' => env('HEADLESS_PREVIEW_SECRET', ''),
     ],
+
+    // Tell the front end what changed (a post published, a term edited, a menu, a site option, a file), so it can
+    // refresh its cache. A change is stored at once and sent a few seconds later, merged with the others, from
+    // Action Scheduler when it is loaded and from WP-Cron otherwise; a target that fails is tried again later.
+    // Each notification is a signed POST: see the README for how a front end checks it.
+    'revalidation' => [
+        'enabled' => true,
+        'targets' => [
+            // ['name' => 'next', 'url' => 'https://www.example.com/api/revalidate', 'secret' => env('HEADLESS_REVALIDATE_SECRET')],
+        ],
+        // Seconds to wait for more changes before sending.
+        'debounce' => 3,
+        // Attempts per target (1 to 5): after the first failure, 30 seconds, 2 minutes, 10 minutes, 1 hour.
+        'max_attempts' => 5,
+        // More options whose change is announced, on top of the title, the permalinks, the front page and a few more.
+        'options' => [],
+    ],
 ];

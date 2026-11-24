@@ -16,6 +16,7 @@ use Pollora\Headless\Infrastructure\Config\Settings;
 use Pollora\Headless\Infrastructure\Config\SettingsLoader;
 use Pollora\Headless\Infrastructure\Language\LanguagesFactory;
 use Pollora\Headless\Infrastructure\Language\NoLanguages;
+use Pollora\Headless\Infrastructure\Revalidation\RevalidatorFactory;
 
 /**
  * Starts the package: builds the modules the settings ask for and attaches them.
@@ -81,6 +82,12 @@ final class Bootstrap
             );
             $modules[] = new PreviewLinks($service, $settings->previewUrl);
             $modules[] = new PreviewRoutes($service, new PreviewPostResponse);
+        }
+
+        if ($settings->revalidationTargets !== []) {
+            $revalidator = RevalidatorFactory::fromSettings($settings);
+            $modules[] = new ChangeWatcher($revalidator, $languages, $settings->revalidationOptions);
+            $modules[] = new RevalidationRunner($revalidator);
         }
 
         if ($settings->restCache instanceof RestCachePolicy || $settings->perPageMax !== null) {

@@ -20,4 +20,5 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 - Multilingual sites: Polylang and WPML, a front end per language (`frontend_urls`).
 - API tokens with scopes, routes, expiry and rotation (`wp headless token`).
 - Preview of drafts, scheduled and private posts from the front end: one-time link token, session, `GET /wp-json/headless/v1/preview/posts/{id}` (autosave, live or revision).
+- Revalidation: signed notifications of changes (posts, terms, menus, site options, files) to the front end, merged, off the request (Action Scheduler or WP-Cron), with retries; `wp headless revalidate ping`.
 - mu-plugin loader (`stubs/pollora-headless.php`) and a Pollora service provider discovered by Composer.

@@ -24,6 +24,13 @@ final class SettingsLoader
     public static function load(string $backendUrl, int $siteId = 1): Settings
     {
         $config = defined('HEADLESS_CONFIG') && is_array(HEADLESS_CONFIG) ? HEADLESS_CONFIG : [];
+        // The short form of a single revalidation target
+        if (defined('HEADLESS_REVALIDATE_URL') && is_string(HEADLESS_REVALIDATE_URL) && defined('HEADLESS_REVALIDATE_SECRET') && is_string(HEADLESS_REVALIDATE_SECRET)) {
+            $revalidation = is_array($config['revalidation'] ?? null) ? $config['revalidation'] : [];
+            $revalidation['targets'] = [...(is_array($revalidation['targets'] ?? null) ? $revalidation['targets'] : []), ['name' => 'default', 'url' => HEADLESS_REVALIDATE_URL, 'secret' => HEADLESS_REVALIDATE_SECRET]];
+            $config['revalidation'] = $revalidation;
+        }
+
         $frontendUrl = defined('HEADLESS_FRONTEND_URL') && is_string(HEADLESS_FRONTEND_URL) ? HEADLESS_FRONTEND_URL : null;
 
         // The short form of the signing secret, kept out of the settings array that may be printed or committed
