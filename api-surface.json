@@ -3,6 +3,7 @@
     "surface": {
         "config:headless": "unreadable without the application",
         "hook:pollora/headless/flush": "hook",
-        "hook:pollora/headless/retry": "hook"
+        "hook:pollora/headless/retry": "hook",
+        "hook:pollora/media/focal_point": "filter"
     }
 }

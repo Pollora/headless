@@ -62,6 +62,8 @@ final readonly class Settings
         public bool $manifest,
         public bool $redirects,
         public bool $oldSlugRedirects,
+        public bool $mediaRoutes,
+        public ?string $mediaCdn,
     ) {}
 
     /**
@@ -73,6 +75,7 @@ final readonly class Settings
         $backend = Origin::fromUrl($backendUrl);
         $preview = is_array($config['preview'] ?? null) ? $config['preview'] : [];
         $revalidation = is_array($config['revalidation'] ?? null) ? $config['revalidation'] : [];
+        $media = is_array($config['media'] ?? null) ? $config['media'] : [];
         $frontUrl = self::string($config, 'frontend_url');
         $front = $frontUrl === '' ? null : Origin::fromUrl($frontUrl);
 
@@ -122,6 +125,8 @@ final readonly class Settings
             manifest: $front instanceof Origin && self::bool(is_array($config['manifest'] ?? null) ? $config['manifest'] : [], 'enabled', true),
             redirects: $front instanceof Origin && self::bool(is_array($config['redirects'] ?? null) ? $config['redirects'] : [], 'enabled', true),
             oldSlugRedirects: self::bool(is_array($config['redirects'] ?? null) ? $config['redirects'] : [], 'old_slugs', true),
+            mediaRoutes: $front instanceof Origin && self::bool($media, 'enabled', true),
+            mediaCdn: self::mediaCdn($media),
         );
     }
 
@@ -247,6 +252,24 @@ final readonly class Settings
         }
 
         return $targets;
+    }
+
+    /**
+     * The address the CDN serves the uploads from, without its trailing slash; null when there is none.
+     *
+     * @param  array<string, mixed>  $config
+     */
+    private static function mediaCdn(array $config): ?string
+    {
+        $url = rtrim(self::string($config, 'cdn_url'), '/');
+
+        if ($url === '') {
+            return null;
+        }
+
+        Origin::fromUrl($url);
+
+        return $url;
     }
 
     private static function mode(string $value, bool $hasFront): FrontMode

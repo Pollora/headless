@@ -23,4 +23,5 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 - Revalidation: signed notifications of changes (posts, terms, menus, site options, files) to the front end, merged, off the request (Action Scheduler or WP-Cron), with retries; `wp headless revalidate ping`.
 - Site manifest: `GET /wp-json/headless/v1/site` (site, languages, menus as trees, locations, front page, content types and taxonomies).
 - Redirects: rules managed with `wp headless redirect`, the old slugs of renamed posts, `GET /wp-json/headless/v1/redirects` and `/redirects/resolve`.
+- Media: `GET /wp-json/headless/v1/media/{id}` (one shape for every kind, with the focal point of `pollora/media`), the `headless_featured_media` field, and `media.cdn_url` to serve the uploads from a CDN.
 - mu-plugin loader (`stubs/pollora-headless.php`) and a Pollora service provider discovered by Composer.

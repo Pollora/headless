@@ -129,4 +129,13 @@ return [
         'enabled' => true,
         'old_slugs' => true,
     ],
+
+    // GET /wp-json/headless/v1/media/{id}: a file in one shape (url, sizes, srcset, alt, focal point from pollora/media…), and the
+    // field `headless_featured_media` of a post when _fields asks for it. `cdn_url` serves the uploads from a CDN or an image proxy:
+    // https://cdn.example.com replaces https://cms.example.com/wp-content/uploads in the addresses of files, in srcset and in the content
+    // (not in the administration). The routes are active once a front-end URL is set; the CDN once its address is.
+    'media' => [
+        'enabled' => true,
+        'cdn_url' => env('HEADLESS_MEDIA_CDN_URL', ''),
+    ],
 ];

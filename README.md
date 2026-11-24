@@ -25,6 +25,7 @@ It works on a classic WordPress, on Bedrock and inside a [Pollora](https://pollo
 | Revalidation | When a post is published, updated, unpublished or deleted, or a term, a menu, a site option or a file changes, the front end is told: one signed POST, merged with the other changes of the last seconds, sent off the request, tried again if it fails. See [Revalidation](#telling-your-front-end-what-changed). |
 | Site manifest | `GET /wp-json/headless/v1/site`: the site and its languages, the menus as trees with front-end paths, the menu locations, the front page and the content types with their REST routes, in one public, cacheable answer. |
 | Redirects | The redirects of the site for a front end: the ones you manage (`wp headless redirect add /old/ /new/`, patterns, 410 for a page that is gone) and the old addresses WordPress remembers for renamed posts, at `GET /wp-json/headless/v1/redirects` (every rule) and `/redirects/resolve?path=/old/` (one path). |
+| Media | A file of the library in one shape whatever its kind (`GET /wp-json/headless/v1/media/{id}`: url, sizes, srcset, alt, caption, the focal point set with `pollora/media`), the featured image of a post in full without a second request, and the uploads served from a CDN. |
 | URL mapper | `UrlMapper::toFront()` turns a URL of the WordPress site into the URL of the same page on the front end. It is the one place every URL the package hands out goes through. |
 
 Nothing changes on the public site until you set the front-end URL: a site that is not told where its front end lives is never locked.
@@ -171,6 +172,21 @@ const { redirect } = await (await fetch(`https://cms.example.com/wp-json/headles
 ```
 
 An exact rule wins over a pattern, and the rules you write win over the old slugs. A rule is checked when it is made (a path, a destination that is a path or an absolute http(s) URL, a status of 301, 302, 307, 308 or 410, a pattern that compiles, no loop). Changing the rules is announced to the front end with the `option:headless_redirects` tag.
+
+## Media
+
+```js
+const image = await (await fetch('https://cms.example.com/wp-json/headless/v1/media/42')).json();
+// { id, kind: 'image', mime, url, title, alt, caption, description, width, height, filesize, duration,
+//   focal_point: { x: 0.25, y: 0.75 } | null, sizes: { medium: { url, width, height }, …, full: {…} }, srcset, modified_gmt }
+
+// The featured image of a post, in the same request (a field that costs something is computed only when you name it)
+const post = await (await fetch('https://cms.example.com/wp-json/wp/v2/posts/12?_fields=id,title,headless_featured_media')).json();
+```
+
+`focal_point` is the part of the image to keep whatever the crop (use it as `object-position: 25% 75%`); it comes from [`pollora/media`](https://github.com/Pollora/media) and is `null` without it. A file attached to a draft answers 404 to a visitor.
+
+To serve the uploads from a CDN or an image proxy, set `media.cdn_url` (or `HEADLESS_MEDIA_CDN_URL` on Pollora): `https://cdn.example.com` replaces `https://cms.example.com/wp-content/uploads` in the address of every file, in `srcset` and in the HTML of the content. The administration keeps the WordPress addresses, so that an editor sees a file they have just uploaded.
 
 ## Roadmap
 
