@@ -20,8 +20,10 @@ use Pollora\Headless\Infrastructure\Language\LanguagesFactory;
 use Pollora\Headless\Infrastructure\Language\NoLanguages;
 use Pollora\Headless\Infrastructure\Redirect\OldSlugRedirects;
 use Pollora\Headless\Infrastructure\Redirect\OptionRedirectStore;
+use Pollora\Headless\Infrastructure\Redirect\RankMathRedirects;
 use Pollora\Headless\Infrastructure\Redirect\RedirectCatalog;
 use Pollora\Headless\Infrastructure\Revalidation\RevalidatorFactory;
+use Pollora\Headless\Infrastructure\Seo\SeoProviders;
 
 /**
  * Starts the package: builds the modules the settings ask for and attaches them.
@@ -106,7 +108,14 @@ final class Bootstrap
             $urls ??= $languages->isActive()
                 ? new LanguageUrls($settings->urls, $settings->backend, $settings->front, $settings->languageFronts, $languages)
                 : $settings->urls;
-            $modules[] = new RedirectRoutes(new RedirectCatalog([new OptionRedirectStore, ...($settings->oldSlugRedirects ? [new OldSlugRedirects($urls)] : [])]));
+            $modules[] = new RedirectRoutes(new RedirectCatalog([new OptionRedirectStore, ...(defined('RANK_MATH_VERSION') ? [new RankMathRedirects] : []), ...($settings->oldSlugRedirects ? [new OldSlugRedirects($urls)] : [])]));
+        }
+
+        if ($settings->seo && $settings->urls instanceof UrlMapper && $settings->front instanceof Origin) {
+            $seoUrls = $languages->isActive()
+                ? new LanguageUrls($settings->urls, $settings->backend, $settings->front, $settings->languageFronts, $languages)
+                : $settings->urls;
+            $modules[] = new SeoField(SeoProviders::detect(), $seoUrls);
         }
 
         if ($settings->blocks) {

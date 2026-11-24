@@ -65,6 +65,7 @@ final readonly class Settings
         public bool $mediaRoutes,
         public ?string $mediaCdn,
         public bool $blocks,
+        public bool $seo,
     ) {}
 
     /**
@@ -129,6 +130,7 @@ final readonly class Settings
             mediaRoutes: $front instanceof Origin && self::bool($media, 'enabled', true),
             mediaCdn: self::mediaCdn($media),
             blocks: $front instanceof Origin && self::bool(is_array($config['blocks'] ?? null) ? $config['blocks'] : [], 'enabled', true),
+            seo: $front instanceof Origin && self::bool(is_array($config['seo'] ?? null) ? $config['seo'] : [], 'enabled', true),
         );
     }
 

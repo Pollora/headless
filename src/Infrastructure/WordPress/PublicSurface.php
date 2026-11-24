@@ -35,7 +35,8 @@ final readonly class PublicSurface implements Module
 
         if ($this->noindexOrigin) {
             $hooks->addFilter('wp_headers', [$this, 'withNoindexHeader']);
-            $hooks->addFilter('robots_txt', [$this, 'robotsTxt']);
+            // Last: a SEO plugin adds its own lines (a sitemap, rules) to robots.txt, and an origin that is not to be indexed says only this
+            $hooks->addFilter('robots_txt', [$this, 'robotsTxt'], PHP_INT_MAX);
             $hooks->addFilter('wp_robots', [$this, 'robots']);
         }
     }
