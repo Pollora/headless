@@ -34,6 +34,12 @@ if ($wordpressPath === '' || ! is_file($wordpressPath.'/wp-load.php')) {
 // (the harness job writes it there): defining it again here would raise a "constant already defined" warning.
 define('WP_USE_THEMES', false);
 
+// Polylang loads its public functions (PLL(), pll_*) only once a language exists, or in its administration
+// context. The suite starts from a site with no language and creates them, so it asks for that context.
+if (! defined('PLL_ADMIN')) {
+    define('PLL_ADMIN', true);
+}
+
 require_once $wordpressPath.'/wp-load.php';
 
 unset($autoload, $wordpressPath);
