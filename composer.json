@@ -36,7 +36,8 @@
     },
     "suggest": {
         "illuminate/support": "Loads the package by itself inside a Pollora (Laravel) project, through the service provider.",
-        "wp-cli/wp-cli": "Runs `wp headless status` on a classic WordPress or Bedrock site."
+        "wp-cli/wp-cli": "Runs `wp headless status` on a classic WordPress or Bedrock site.",
+        "woocommerce/action-scheduler": "Sends the notifications of changes off the request, with retries, and shares the queue with WooCommerce and other plugins. Without it they go through WP-Cron, which runs only when a page is visited."
     },
     "autoload": {
         "psr-4": {

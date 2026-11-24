@@ -12,7 +12,9 @@ use Pollora\Headless\Domain\Front\FrontMode;
 use Pollora\Headless\Domain\Front\Origin;
 use Pollora\Headless\Domain\Front\RedirectStatus;
 use Pollora\Headless\Domain\Front\UrlMapper;
+use Pollora\Headless\Domain\Revalidation\Target;
 use Pollora\Headless\Infrastructure\Exceptions\InvalidSettingsException;
+use Pollora\Headless\Infrastructure\WordPress\ChangeWatcher;
 
 /**
  * The settings of the package, checked once and read as objects.
@@ -24,6 +26,8 @@ final readonly class Settings
 {
     /**
      * @param  array<string, Origin>  $languageFronts  the front-end origin of the languages that have their own
+     * @param  list<Target>  $revalidationTargets  where changes are announced
+     * @param  list<string>  $revalidationOptions  the options whose change is announced
      */
     private function __construct(
         public FrontGatePolicy $gate,
@@ -51,6 +55,10 @@ final readonly class Settings
         public ?string $previewSecret,
         public int $previewLinkTtl,
         public int $previewSessionTtl,
+        public array $revalidationTargets,
+        public int $revalidationDebounce,
+        public int $revalidationAttempts,
+        public array $revalidationOptions,
     ) {}
 
     /**
@@ -61,6 +69,7 @@ final readonly class Settings
     {
         $backend = Origin::fromUrl($backendUrl);
         $preview = is_array($config['preview'] ?? null) ? $config['preview'] : [];
+        $revalidation = is_array($config['revalidation'] ?? null) ? $config['revalidation'] : [];
         $frontUrl = self::string($config, 'frontend_url');
         $front = $frontUrl === '' ? null : Origin::fromUrl($frontUrl);
 
@@ -103,6 +112,10 @@ final readonly class Settings
             previewSecret: self::string($preview, 'secret') !== '' ? self::string($preview, 'secret') : null,
             previewLinkTtl: max(30, self::int($preview, 'link_ttl', 300)),
             previewSessionTtl: max(60, self::int($preview, 'session_ttl', 1800)),
+            revalidationTargets: self::targets($revalidation),
+            revalidationDebounce: max(0, self::int($revalidation, 'debounce', 3)),
+            revalidationAttempts: min(5, max(1, self::int($revalidation, 'max_attempts', 5))),
+            revalidationOptions: array_values(array_unique([...ChangeWatcher::defaultOptions(), ...self::strings($revalidation, 'options')])),
         );
     }
 
@@ -191,6 +204,43 @@ final readonly class Settings
         $url = self::string($config, 'url', '/api/preview');
 
         return str_starts_with($url, '/') ? $front->toString().$url : Origin::fromUrl($url)->toString().parse_url($url, PHP_URL_PATH);
+    }
+
+    /**
+     * The targets of the revalidation notifications; none when it is switched off.
+     *
+     * @param  array<string, mixed>  $config
+     * @return list<Target>
+     *
+     * @throws InvalidSettingsException when a target has no secret: an unsigned notification would be accepted by anyone
+     */
+    private static function targets(array $config): array
+    {
+        if (! self::bool($config, 'enabled', true)) {
+            return [];
+        }
+
+        $targets = [];
+
+        foreach (is_array($config['targets'] ?? null) ? $config['targets'] : [] as $index => $target) {
+            $target = is_array($target) ? $target : [];
+            $url = self::string($target, 'url');
+            $secret = self::string($target, 'secret');
+
+            if ($url === '') {
+                continue;
+            }
+
+            Origin::fromUrl($url);
+
+            if ($secret === '') {
+                throw InvalidSettingsException::missing('revalidation.targets.'.$index.'.secret');
+            }
+
+            $targets[] = new Target(self::string($target, 'name', 'target-'.$index) ?: 'target-'.$index, $url, $secret);
+        }
+
+        return $targets;
     }
 
     private static function mode(string $value, bool $hasFront): FrontMode

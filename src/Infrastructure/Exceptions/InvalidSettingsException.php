@@ -18,4 +18,9 @@ final class InvalidSettingsException extends InvalidArgumentException
     {
         return new self(sprintf('"%s" is not a valid value for "%s" (expected one of: %s).', $value, $key, implode(', ', $allowed)));
     }
+
+    public static function missing(string $key): self
+    {
+        return new self(sprintf('"%s" is required and is empty.', $key));
+    }
 }

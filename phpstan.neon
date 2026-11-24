@@ -13,3 +13,8 @@ parameters:
         - vendor/php-stubs/wordpress-stubs/wordpress-stubs.php
         - vendor/php-stubs/wp-cli-stubs/wp-cli-stubs.php
         - vendor/wpsyntex/polylang-stubs/polylang-stubs.php
+    ignoreErrors:
+        # Action Scheduler is a plugin, not part of the WordPress stubs: the package uses its functions only after checking they exist
+        - '#Function as_[a-z_]+ not found#'
+    # Only the patterns still needed are listed: report one that no longer matches, so it is removed
+    reportUnmatchedIgnoredErrors: true

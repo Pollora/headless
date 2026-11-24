@@ -33,3 +33,19 @@ it('warns about a missing front-end URL, a looping one and a missing theme', fun
         ->and($loop->warnings[0])->toContain('would loop')
         ->and(array_column($none->rows, 1, 0)['Front gate'])->toBe('off');
 });
+
+it('lists the revalidation targets and warns when Action Scheduler is missing', function (): void {
+    $settings = Settings::fromArray(['frontend_url' => 'https://www.example.com', 'revalidation' => ['targets' => [['name' => 'next', 'url' => 'https://www.example.com/api/revalidate', 'secret' => 'k']]]], 'https://cms.example.com');
+
+    $without = StatusReport::build($settings, site(), true, false, null, false);
+    $with = StatusReport::build($settings, site(), true, false, null, true);
+    $off = StatusReport::build(Settings::fromArray(['frontend_url' => 'https://www.example.com'], 'https://cms.example.com'), site(), true, false);
+
+    expect(array_column($without->rows, 1, 0)['Revalidation'])->toBe('next (WP-Cron)')
+        ->and(array_column($with->rows, 1, 0)['Revalidation'])->toBe('next (Action Scheduler)')
+        ->and($without->warnings)->toHaveCount(1)
+        ->and($without->warnings[0])->toContain('Action Scheduler is not loaded')
+        ->and($with->warnings)->toBe([])
+        ->and(array_column($off->rows, 1, 0)['Revalidation'])->toBe('off')
+        ->and(array_column($off->rows, 1, 0)['Preview'])->toBe('https://www.example.com/api/preview');
+});
