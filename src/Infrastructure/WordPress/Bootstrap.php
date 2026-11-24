@@ -11,6 +11,7 @@ use Pollora\Headless\Domain\Content\ContentLinks;
 use Pollora\Headless\Domain\Cors\CorsPolicy;
 use Pollora\Headless\Domain\Front\Origin;
 use Pollora\Headless\Domain\Front\UrlMapper;
+use Pollora\Headless\Domain\GraphQl\GraphQlPolicy;
 use Pollora\Headless\Domain\Language\Languages;
 use Pollora\Headless\Domain\Language\LanguageUrls;
 use Pollora\Headless\Domain\Media\MediaUrls;
@@ -74,8 +75,15 @@ final class Bootstrap
             $modules[] = new Cors($settings->cors);
         }
 
+        $tokens = null;
+
         if ($settings->apiTokens) {
-            $modules[] = new TokenAuthentication(new TokenService(new UserMetaTokenStore));
+            $tokens = new TokenAuthentication(new TokenService(new UserMetaTokenStore));
+            $modules[] = $tokens;
+        }
+
+        if ($settings->graphql instanceof GraphQlPolicy) {
+            $modules[] = new GraphQl($settings->graphql, $settings->cors, $tokens);
         }
 
         if ($settings->previewUrl !== null && $settings->front instanceof Origin) {

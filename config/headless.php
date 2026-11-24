@@ -152,4 +152,19 @@ return [
     'seo' => [
         'enabled' => true,
     ],
+
+    // WPGraphQL, when the plugin is active (nothing happens otherwise). Its settings live in the database, where an editor can change
+    // them; these are imposed in code instead. Set a key to null to leave that setting to WPGraphQL. Introspection stays closed to
+    // visitors (a logged-in API token can still read the schema, and `wp headless schema graphql` writes it to a file); WPGraphQL has no
+    // query cost limit, so the batch size and the depth are capped. The CORS answer comes from the `cors` section above.
+    // An API token may call GraphQL: a token without the write scope cannot run a mutation. Preview with a token and `X-GraphQL-Preview`.
+    'graphql' => [
+        'enabled' => true,
+        'introspection' => false,
+        'debug' => false,
+        'batch_limit' => 5, // 0 turns batching off
+        'max_depth' => 15, // 0 turns the depth limit off
+        'graphiql' => null,
+        'restrict_to_logged_in' => null,
+    ],
 ];

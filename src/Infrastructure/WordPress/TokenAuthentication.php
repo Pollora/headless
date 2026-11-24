@@ -30,13 +30,13 @@ final class TokenAuthentication implements Module
     private readonly Closure $isRestRequest;
 
     /**
-     * @param  (callable(): bool)|null  $isRestRequest  whether this is a REST request; replaced in tests
+     * @param  (callable(): bool)|null  $isRestRequest  whether this is a REST or a GraphQL request; replaced in tests
      */
     public function __construct(
         private readonly TokenService $tokens,
         ?callable $isRestRequest = null,
     ) {
-        $this->isRestRequest = $isRestRequest !== null ? Closure::fromCallable($isRestRequest) : static fn (): bool => defined('REST_REQUEST') && REST_REQUEST;
+        $this->isRestRequest = $isRestRequest !== null ? Closure::fromCallable($isRestRequest) : static fn (): bool => (defined('REST_REQUEST') && REST_REQUEST) || (function_exists('is_graphql_http_request') && is_graphql_http_request());
     }
 
     public function register(HookRegistrar $hooks): void
@@ -90,6 +90,12 @@ final class TokenAuthentication implements Module
         }
 
         return new \WP_Error('headless_token_scope', 'This API token is not allowed to make this request.', ['status' => 403]);
+    }
+
+    /** The token the request is made with, when it is one. */
+    public function token(): ?Token
+    {
+        return $this->token;
     }
 
     private static function bearer(): ?string

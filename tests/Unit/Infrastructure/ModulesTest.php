@@ -120,7 +120,7 @@ it('builds the gate and the clean-up from the settings and attaches them', funct
     Functions\when('wp_salt')->justReturn('salt');
     $settings = Settings::fromArray(['frontend_url' => 'https://www.example.com'], 'https://cms.example.com');
 
-    expect(Bootstrap::modules($settings))->toHaveCount(15);
+    expect(Bootstrap::modules($settings))->toHaveCount(16);
 
     Actions\expectAdded('template_redirect')->once();
     Actions\expectAdded('rest_api_init')->times(7);
@@ -141,7 +141,7 @@ it('builds the gate and the clean-up from the settings and attaches them', funct
 it('hooks no gate when the front is left as it is', function (): void {
     $settings = Settings::fromArray([], 'https://cms.example.com');
 
-    expect(Bootstrap::modules($settings))->toHaveCount(4);
+    expect(Bootstrap::modules($settings))->toHaveCount(5);
 
     Actions\expectAdded('template_redirect')->never();
     Actions\expectAdded('rest_api_init')->never();

@@ -34,7 +34,7 @@ final readonly class CorsPolicy
         array $origins,
         private bool $credentials = false,
         private array $methods = ['GET', 'HEAD', 'OPTIONS', 'POST', 'PUT', 'PATCH', 'DELETE'],
-        private array $headers = ['Authorization', 'Content-Type', 'Accept', 'X-WP-Nonce', 'X-HTTP-Method-Override'],
+        private array $headers = ['Authorization', 'Content-Type', 'Accept', 'X-WP-Nonce', 'X-HTTP-Method-Override', 'X-GraphQL-Preview'],
         private int $maxAge = 600,
         private array $exposeHeaders = ['X-WP-Total', 'X-WP-TotalPages', 'Link'],
     ) {

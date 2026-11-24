@@ -17,8 +17,8 @@ $root = getcwd() ?: '.';
 return (new Configuration)
     ->disableReportingUnmatchedIgnores()
     ->ignoreUnknownClassesRegex('~^(WP_|Walker_|Requests_|wpdb$)~')
-    // Action Scheduler is a plugin, loaded by WordPress or by another package: the code checks it exists before it uses it
-    ->ignoreUnknownClasses(['ActionScheduler', 'ActionScheduler_Store'])
+    // Action Scheduler and WPGraphQL are plugins, loaded by WordPress or by another package: the code checks it exists before it uses it
+    ->ignoreUnknownClasses(['ActionScheduler', 'ActionScheduler_Store', 'GraphQL\\Error\\UserError'])
     ->ignoreUnknownFunctionsRegex('~.*~')
     ->ignoreErrorsOnExtensions(['ext-ctype', 'ext-filter', 'ext-json', 'ext-mbstring'], [ErrorType::SHADOW_DEPENDENCY])
     ->ignoreErrorsOnPackage('illuminate/support', [ErrorType::DEV_DEPENDENCY_IN_PROD])
