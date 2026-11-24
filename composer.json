@@ -1,0 +1,78 @@
+{
+    "name": "pollora/headless",
+    "description": "Prepare WordPress for headless mode: lock the public front, trim what a headless site does not need, secure and speed up the API, preview and revalidation.",
+    "keywords": [
+        "pollora",
+        "wordpress",
+        "headless",
+        "laravel",
+        "rest-api",
+        "graphql",
+        "bedrock"
+    ],
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Olivier Gorzalka",
+            "email": "olivier@amphibee.fr",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.3"
+    },
+    "require-dev": {
+        "antecedent/patchwork": "^2.2",
+        "brain/monkey": "^2.7",
+        "illuminate/support": "^13.0",
+        "laravel/pint": "^1.22.1",
+        "pestphp/pest": "^3.8.2",
+        "phpstan/phpstan": "^2.1.16",
+        "pollora/harness": "^0.1.35",
+        "szepeviktor/phpstan-wordpress": "^2.0"
+    },
+    "suggest": {
+        "illuminate/support": "Loads the package by itself inside a Pollora (Laravel) project, through the service provider.",
+        "wp-cli/wp-cli": "Runs `wp headless status` on a classic WordPress or Bedrock site."
+    },
+    "autoload": {
+        "psr-4": {
+            "Pollora\\Headless\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Pollora\\Headless\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Pollora\\Headless\\Infrastructure\\Pollora\\HeadlessServiceProvider"
+            ]
+        }
+    },
+    "scripts": {
+        "test": [
+            "@test:unit",
+            "@phpstan",
+            "@lint:check"
+        ],
+        "test:unit": "pest",
+        "phpstan": "phpstan analyse",
+        "phpstan:ci": "phpstan analyse --no-progress",
+        "lint": "pint",
+        "lint:check": "pint --test",
+        "qa": "@php vendor/bin/pollora-qa check",
+        "qa:fast": "@php vendor/bin/pollora-qa check --fast"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
