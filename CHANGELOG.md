@@ -13,4 +13,10 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 - `wp headless status` and `wp headless theme install [--activate]` (the empty theme WordPress needs).
 - Multisite: per-site settings (`sites`), site context. Sub-directory installs.
 - Integration suite against a real WordPress.
+- CORS policy for the REST API (listed origins only, `Vary: Origin`, patterns, preflight).
+- REST security: users routes need a login, no users provider in the core sitemap, `DISALLOW_FILE_EDIT`.
+- REST speed: `Cache-Control`, `ETag` and 304 on public answers, `per_page` ceiling.
+- Front-end links: permalinks and content links point to the front end.
+- Multilingual sites: Polylang and WPML, a front end per language (`frontend_urls`).
+- API tokens with scopes, routes, expiry and rotation (`wp headless token`).
 - mu-plugin loader (`stubs/pollora-headless.php`) and a Pollora service provider discovered by Composer.
