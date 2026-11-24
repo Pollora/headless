@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Pollora\Headless\Infrastructure\Config\Settings;
 use Pollora\Headless\Infrastructure\Config\SettingsLoader;
+use Pollora\Headless\Infrastructure\Language\LanguagesFactory;
 use Pollora\Headless\Infrastructure\Status\StatusReport;
 use Pollora\Headless\Infrastructure\WordPress\SiteContext;
 use Pollora\Headless\Infrastructure\WordPress\StubTheme;
@@ -25,6 +26,7 @@ if (defined('WP_CLI') && WP_CLI && class_exists('WP_CLI')) {
             SiteContext::current(),
             wp_get_theme()->exists(),
             defined('DISABLE_WP_CRON') && DISABLE_WP_CRON,
+            LanguagesFactory::detect(),
         ),
         static fn (): StubTheme => new StubTheme(get_theme_root(), dirname(__DIR__, 3).'/resources/theme'),
         static function (string $slug): void {

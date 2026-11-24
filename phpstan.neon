@@ -12,3 +12,4 @@ parameters:
     scanFiles:
         - vendor/php-stubs/wordpress-stubs/wordpress-stubs.php
         - vendor/php-stubs/wp-cli-stubs/wp-cli-stubs.php
+        - vendor/wpsyntex/polylang-stubs/polylang-stubs.php

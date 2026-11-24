@@ -11,6 +11,7 @@ use Pollora\Headless\Domain\Front\FrontMode;
 use Pollora\Headless\Domain\Front\Origin;
 use Pollora\Headless\Infrastructure\Config\Settings;
 use Pollora\Headless\Infrastructure\Config\SettingsLoader;
+use Pollora\Headless\Infrastructure\Language\NoLanguages;
 use Pollora\Headless\Infrastructure\WordPress\Bootstrap;
 use Pollora\Headless\Infrastructure\WordPress\CleanUp;
 use Pollora\Headless\Infrastructure\WordPress\TemplateRedirectGate;
@@ -132,7 +133,7 @@ it('builds the gate and the clean-up from the settings and attaches them', funct
     Filters\expectAdded('xmlrpc_enabled')->once();
     Filters\expectAdded('wp_headers')->twice();
 
-    Bootstrap::boot($settings, new WordPressHooks);
+    Bootstrap::boot($settings, new WordPressHooks, new NoLanguages);
 });
 
 it('hooks no gate when the front is left as it is', function (): void {
@@ -148,7 +149,7 @@ it('hooks no gate when the front is left as it is', function (): void {
     Filters\expectAdded('xmlrpc_enabled')->once();
     Filters\expectAdded('wp_headers')->twice();
 
-    Bootstrap::boot($settings, new WordPressHooks);
+    Bootstrap::boot($settings, new WordPressHooks, new NoLanguages);
 });
 
 it('starts at once when plugins are already loaded', function (): void {
