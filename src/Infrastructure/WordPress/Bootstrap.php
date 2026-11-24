@@ -17,6 +17,9 @@ use Pollora\Headless\Infrastructure\Config\Settings;
 use Pollora\Headless\Infrastructure\Config\SettingsLoader;
 use Pollora\Headless\Infrastructure\Language\LanguagesFactory;
 use Pollora\Headless\Infrastructure\Language\NoLanguages;
+use Pollora\Headless\Infrastructure\Redirect\OldSlugRedirects;
+use Pollora\Headless\Infrastructure\Redirect\OptionRedirectStore;
+use Pollora\Headless\Infrastructure\Redirect\RedirectCatalog;
 use Pollora\Headless\Infrastructure\Revalidation\RevalidatorFactory;
 
 /**
@@ -96,6 +99,13 @@ final class Bootstrap
                 ? new LanguageUrls($settings->urls, $settings->backend, $settings->front, $settings->languageFronts, $languages)
                 : $settings->urls;
             $modules[] = new ManifestRoutes(new SiteManifest($urls, $settings->front, $languages));
+        }
+
+        if ($settings->redirects && $settings->urls instanceof UrlMapper && $settings->front instanceof Origin) {
+            $urls ??= $languages->isActive()
+                ? new LanguageUrls($settings->urls, $settings->backend, $settings->front, $settings->languageFronts, $languages)
+                : $settings->urls;
+            $modules[] = new RedirectRoutes(new RedirectCatalog([new OptionRedirectStore, ...($settings->oldSlugRedirects ? [new OldSlugRedirects($urls)] : [])]));
         }
 
         if ($settings->restCache instanceof RestCachePolicy || $settings->perPageMax !== null) {

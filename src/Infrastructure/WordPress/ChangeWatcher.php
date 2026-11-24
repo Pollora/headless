@@ -38,7 +38,7 @@ final class ChangeWatcher implements Module
     /** @return list<string> */
     public static function defaultOptions(): array
     {
-        return ['blogname', 'blogdescription', 'home', 'siteurl', 'page_on_front', 'page_for_posts', 'show_on_front', 'permalink_structure', 'category_base', 'tag_base', 'posts_per_page', 'date_format', 'time_format', 'timezone_string', 'gmt_offset', 'WPLANG', 'site_icon', 'sidebars_widgets'];
+        return ['blogname', 'blogdescription', 'home', 'siteurl', 'page_on_front', 'page_for_posts', 'show_on_front', 'permalink_structure', 'category_base', 'tag_base', 'posts_per_page', 'date_format', 'time_format', 'timezone_string', 'gmt_offset', 'WPLANG', 'site_icon', 'sidebars_widgets', 'headless_redirects'];
     }
 
     public function register(HookRegistrar $hooks): void

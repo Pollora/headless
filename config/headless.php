@@ -121,4 +121,12 @@ return [
     'manifest' => [
         'enabled' => true,
     ],
+
+    // Redirects for the front end: GET /wp-json/headless/v1/redirects (every rule) and /redirects/resolve?path=/old/ (one path).
+    // Manage yours with `wp headless redirect add|remove|list|test`. `old_slugs` adds the earlier addresses WordPress remembers
+    // for renamed posts, each to the current address. Only active once a front-end URL is set.
+    'redirects' => [
+        'enabled' => true,
+        'old_slugs' => true,
+    ],
 ];

@@ -120,10 +120,10 @@ it('builds the gate and the clean-up from the settings and attaches them', funct
     Functions\when('wp_salt')->justReturn('salt');
     $settings = Settings::fromArray(['frontend_url' => 'https://www.example.com'], 'https://cms.example.com');
 
-    expect(Bootstrap::modules($settings))->toHaveCount(11);
+    expect(Bootstrap::modules($settings))->toHaveCount(12);
 
     Actions\expectAdded('template_redirect')->once();
-    Actions\expectAdded('rest_api_init')->times(3);
+    Actions\expectAdded('rest_api_init')->times(4);
     Filters\expectAdded('preview_post_link')->once();
     Filters\expectAdded('rest_pre_dispatch')->once();
     Filters\expectAdded('rest_post_dispatch')->once();

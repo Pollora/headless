@@ -22,4 +22,5 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 - Preview of drafts, scheduled and private posts from the front end: one-time link token, session, `GET /wp-json/headless/v1/preview/posts/{id}` (autosave, live or revision).
 - Revalidation: signed notifications of changes (posts, terms, menus, site options, files) to the front end, merged, off the request (Action Scheduler or WP-Cron), with retries; `wp headless revalidate ping`.
 - Site manifest: `GET /wp-json/headless/v1/site` (site, languages, menus as trees, locations, front page, content types and taxonomies).
+- Redirects: rules managed with `wp headless redirect`, the old slugs of renamed posts, `GET /wp-json/headless/v1/redirects` and `/redirects/resolve`.
 - mu-plugin loader (`stubs/pollora-headless.php`) and a Pollora service provider discovered by Composer.
