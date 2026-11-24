@@ -2,13 +2,16 @@
 
 declare(strict_types=1);
 
+use Pollora\Headless\Application\Token\TokenService;
 use Pollora\Headless\Infrastructure\Config\Settings;
 use Pollora\Headless\Infrastructure\Config\SettingsLoader;
 use Pollora\Headless\Infrastructure\Language\LanguagesFactory;
 use Pollora\Headless\Infrastructure\Status\StatusReport;
 use Pollora\Headless\Infrastructure\WordPress\SiteContext;
 use Pollora\Headless\Infrastructure\WordPress\StubTheme;
+use Pollora\Headless\Infrastructure\WordPress\UserMetaTokenStore;
 use Pollora\Headless\Infrastructure\WpCli\HeadlessCommand;
+use Pollora\Headless\Infrastructure\WpCli\TokenCommand;
 use Pollora\Headless\Infrastructure\WpCli\WpCliOutput;
 
 /*
@@ -32,6 +35,16 @@ if (defined('WP_CLI') && WP_CLI && class_exists('WP_CLI')) {
         static function (string $slug): void {
             switch_theme($slug);
         },
+        new WpCliOutput,
+    ));
+    WP_CLI::add_command('headless token', new TokenCommand(
+        new TokenService(new UserMetaTokenStore),
+        static function (string $who): ?int {
+            $user = ctype_digit($who) ? get_user_by('id', (int) $who) : (is_email($who) ? get_user_by('email', $who) : get_user_by('login', $who));
+
+            return $user instanceof WP_User ? $user->ID : null;
+        },
+        static fn (): int => time(),
         new WpCliOutput,
     ));
 }

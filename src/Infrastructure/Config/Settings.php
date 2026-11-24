@@ -46,6 +46,7 @@ final readonly class Settings
         public bool $rewriteLinks,
         public bool $rewriteContentLinks,
         public array $languageFronts,
+        public bool $apiTokens,
     ) {}
 
     /**
@@ -92,6 +93,7 @@ final readonly class Settings
             rewriteLinks: self::bool($config, 'rewrite_links', true),
             rewriteContentLinks: self::bool($config, 'rewrite_content_links', true),
             languageFronts: self::languageFronts($config['frontend_urls'] ?? []),
+            apiTokens: self::bool(is_array($config['tokens'] ?? null) ? $config['tokens'] : [], 'enabled', true),
         );
     }
 

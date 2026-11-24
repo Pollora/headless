@@ -79,4 +79,9 @@ return [
 
     // Also move the links inside a post's content (pages of the site only: files and the API stay on WordPress).
     'rewrite_content_links' => true,
+
+    // API tokens (`wp headless token create <user>`): Authorization: Bearer hl.…, as the user, limited to scopes (read, write) and routes.
+    'tokens' => [
+        'enabled' => true,
+    ],
 ];
