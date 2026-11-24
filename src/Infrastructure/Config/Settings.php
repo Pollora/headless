@@ -25,6 +25,14 @@ final readonly class Settings
         public ?UrlMapper $urls,
         public bool $cleanHead,
         public bool $disableXmlRpc,
+        public FrontMode $mode,
+        public ?Origin $front,
+        public Origin $backend,
+        public string $basePath,
+        public RedirectStatus $redirectStatus,
+        public bool $disableFeeds,
+        public bool $disableSitemaps,
+        public bool $noindexOrigin,
     ) {}
 
     /**
@@ -38,13 +46,14 @@ final readonly class Settings
         $front = $frontUrl === '' ? null : Origin::fromUrl($frontUrl);
 
         $mode = self::mode(self::string($config, 'mode'), $front instanceof Origin);
+        $redirectStatus = self::redirectStatus(self::string($config, 'redirect_status', '302'));
 
         $gate = new FrontGatePolicy(
             mode: $mode,
             allowList: AllowList::defaults()->with(...self::strings($config, 'allow')),
             backend: $backend,
             front: $front,
-            redirectStatus: self::redirectStatus(self::string($config, 'redirect_status', '302')),
+            redirectStatus: $redirectStatus,
             preserveQuery: self::bool($config, 'preserve_query', true),
             blockedStatus: self::int($config, 'blocked_status', 404),
         );
@@ -54,6 +63,14 @@ final readonly class Settings
             urls: $front instanceof Origin ? new UrlMapper($backend, $front) : null,
             cleanHead: self::bool($config, 'clean_head', true),
             disableXmlRpc: self::bool($config, 'disable_xmlrpc', true),
+            mode: $mode,
+            front: $front,
+            backend: $backend,
+            basePath: rtrim((string) parse_url($backendUrl, PHP_URL_PATH), '/'),
+            redirectStatus: $redirectStatus,
+            disableFeeds: self::bool($config, 'disable_feeds', true),
+            disableSitemaps: self::bool($config, 'disable_sitemaps', true),
+            noindexOrigin: self::bool($config, 'noindex_origin', true),
         );
     }
 

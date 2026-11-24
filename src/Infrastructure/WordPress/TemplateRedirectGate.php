@@ -24,10 +24,12 @@ final class TemplateRedirectGate implements Module
 
     /**
      * @param  (callable(): void)|null  $terminate  ends the request once the answer is sent; replaced in tests
+     * @param  string  $basePath  the directory WordPress is installed in, when it is not the root of the host
      */
     public function __construct(
         private readonly FrontGatePolicy $policy,
         ?callable $terminate = null,
+        private readonly string $basePath = '',
     ) {
         $this->terminate = $terminate !== null ? Closure::fromCallable($terminate) : static function (): never {
             exit;
@@ -44,7 +46,7 @@ final class TemplateRedirectGate implements Module
         $uri = isset($_SERVER['REQUEST_URI']) && is_string($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/';
         $method = isset($_SERVER['REQUEST_METHOD']) && is_string($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'GET';
 
-        $this->apply($this->policy->decide(RequestTarget::fromUri($uri, $method)));
+        $this->apply($this->policy->decide(RequestTarget::fromUri($uri, $method, $this->basePath)));
     }
 
     private function apply(GateDecision $decision): void

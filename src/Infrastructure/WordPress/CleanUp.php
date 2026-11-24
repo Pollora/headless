@@ -40,7 +40,9 @@ final readonly class CleanUp implements Module
         remove_action('wp_head', 'rest_output_link_wp_head', 10);
         remove_action('wp_head', 'feed_links', 2);
         remove_action('wp_head', 'feed_links_extra', 3);
-        remove_action('wp_head', 'wp_oembed_add_discovery_links');
+        // WordPress registers the discovery links twice, at priorities 4 and 10 (found by the integration suite)
+        remove_action('wp_head', 'wp_oembed_add_discovery_links', 4);
+        remove_action('wp_head', 'wp_oembed_add_discovery_links', 10);
         remove_action('wp_head', 'print_emoji_detection_script', 7);
         remove_action('wp_print_styles', 'print_emoji_styles');
         remove_action('template_redirect', 'rest_output_link_header', 11);

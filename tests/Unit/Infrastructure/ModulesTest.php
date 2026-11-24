@@ -106,7 +106,7 @@ it('registers nothing when the clean-up is off', function (): void {
 });
 
 it('removes each head item with the priority it was added at', function (): void {
-    Functions\expect('remove_action')->times(12);
+    Functions\expect('remove_action')->times(13);
 
     (new CleanUp(true, false))->cleanHead();
 });
@@ -118,12 +118,12 @@ it('drops the pingback header and keeps the others', function (): void {
 it('builds the gate and the clean-up from the settings and attaches them', function (): void {
     $settings = Settings::fromArray(['frontend_url' => 'https://www.example.com'], 'https://cms.example.com');
 
-    expect(Bootstrap::modules($settings))->toHaveCount(2);
+    expect(Bootstrap::modules($settings))->toHaveCount(3);
 
     Actions\expectAdded('template_redirect')->once();
     Actions\expectAdded('init')->once();
     Filters\expectAdded('xmlrpc_enabled')->once();
-    Filters\expectAdded('wp_headers')->once();
+    Filters\expectAdded('wp_headers')->twice();
 
     Bootstrap::boot($settings, new WordPressHooks);
 });
@@ -131,12 +131,12 @@ it('builds the gate and the clean-up from the settings and attaches them', funct
 it('hooks no gate when the front is left as it is', function (): void {
     $settings = Settings::fromArray([], 'https://cms.example.com');
 
-    expect(Bootstrap::modules($settings))->toHaveCount(1);
+    expect(Bootstrap::modules($settings))->toHaveCount(2);
 
     Actions\expectAdded('template_redirect')->never();
     Actions\expectAdded('init')->once();
     Filters\expectAdded('xmlrpc_enabled')->once();
-    Filters\expectAdded('wp_headers')->once();
+    Filters\expectAdded('wp_headers')->twice();
 
     Bootstrap::boot($settings, new WordPressHooks);
 });
@@ -144,6 +144,7 @@ it('hooks no gate when the front is left as it is', function (): void {
 it('starts at once when plugins are already loaded', function (): void {
     Functions\when('did_action')->justReturn(1);
     Functions\when('home_url')->justReturn('https://cms.example.com');
+    Functions\when('get_current_blog_id')->justReturn(1);
     Actions\expectAdded('template_redirect')->never();
 
     Bootstrap::fromWordPress();
