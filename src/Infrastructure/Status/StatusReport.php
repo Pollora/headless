@@ -6,6 +6,7 @@ namespace Pollora\Headless\Infrastructure\Status;
 
 use Pollora\Headless\Domain\Front\FrontMode;
 use Pollora\Headless\Domain\Front\Origin;
+use Pollora\Headless\Domain\Language\Languages;
 use Pollora\Headless\Infrastructure\Config\Settings;
 use Pollora\Headless\Infrastructure\WordPress\SiteContext;
 
@@ -27,13 +28,14 @@ final readonly class StatusReport
      * @param  bool  $themeIsValid  whether the active theme exists (without one, WordPress falls into recovery mode)
      * @param  bool  $cronIsDisabled  whether DISABLE_WP_CRON is on (revalidation and scheduled posts then need a system cron)
      */
-    public static function build(Settings $settings, SiteContext $site, bool $themeIsValid, bool $cronIsDisabled): self
+    public static function build(Settings $settings, SiteContext $site, bool $themeIsValid, bool $cronIsDisabled, ?Languages $languages = null): self
     {
         $rows = [
             ['Site', sprintf('#%d, %s%s', $site->siteId, $site->locale, $site->multisite ? ' (multisite)' : '')],
             ['WordPress URL', $settings->backend->toString().$settings->basePath],
             ['Front-end URL', $settings->front?->toString() ?? 'not set'],
             ['Front gate', $settings->mode === FrontMode::Redirect ? sprintf('redirect (%d)', $settings->redirectStatus->value) : $settings->mode->value],
+            ['Languages', $languages instanceof Languages && $languages->isActive() ? $languages->plugin().' ('.implode(', ', $languages->all()).')' : 'single language'],
             ['Head clean-up', self::onOff($settings->cleanHead)],
             ['XML-RPC', $settings->disableXmlRpc ? 'off' : 'on'],
             ['Feeds', $settings->disableFeeds ? 'off' : 'on'],

@@ -8,8 +8,11 @@ use Pollora\Headless\Domain\Cache\RestCachePolicy;
 use Pollora\Headless\Domain\Content\ContentLinks;
 use Pollora\Headless\Domain\Cors\CorsPolicy;
 use Pollora\Headless\Domain\Front\UrlMapper;
+use Pollora\Headless\Domain\Language\Languages;
 use Pollora\Headless\Infrastructure\Config\Settings;
 use Pollora\Headless\Infrastructure\Config\SettingsLoader;
+use Pollora\Headless\Infrastructure\Language\LanguagesFactory;
+use Pollora\Headless\Infrastructure\Language\NoLanguages;
 
 /**
  * Starts the package: builds the modules the settings ask for and attaches them.
@@ -37,9 +40,9 @@ final class Bootstrap
         add_action('plugins_loaded', $start, 1);
     }
 
-    public static function boot(Settings $settings, HookRegistrar $hooks): void
+    public static function boot(Settings $settings, HookRegistrar $hooks, ?Languages $languages = null): void
     {
-        foreach (self::modules($settings) as $module) {
+        foreach (self::modules($settings, $languages ?? LanguagesFactory::detect()) as $module) {
             $module->register($hooks);
         }
     }
@@ -47,8 +50,9 @@ final class Bootstrap
     /**
      * @return list<Module>
      */
-    public static function modules(Settings $settings): array
+    public static function modules(Settings $settings, ?Languages $languages = null): array
     {
+        $languages ??= new NoLanguages;
         $modules = [
             new CleanUp($settings->cleanHead, $settings->disableXmlRpc),
             new PublicSurface($settings->disableFeeds, $settings->disableSitemaps, $settings->noindexOrigin),

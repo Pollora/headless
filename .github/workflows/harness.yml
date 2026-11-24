@@ -17,5 +17,6 @@ jobs:
     uses: Pollora/harness/.github/workflows/php-package.yml@v0.1.35
     with:
       wordpress-integration: tests/Integration
+      wordpress-plugins: polylang
     permissions:
       contents: read

@@ -22,6 +22,9 @@ use Pollora\Headless\Infrastructure\Exceptions\InvalidSettingsException;
  */
 final readonly class Settings
 {
+    /**
+     * @param  array<string, Origin>  $languageFronts  the front-end origin of the languages that have their own
+     */
     private function __construct(
         public FrontGatePolicy $gate,
         public ?UrlMapper $urls,
@@ -42,6 +45,7 @@ final readonly class Settings
         public ?int $perPageMax,
         public bool $rewriteLinks,
         public bool $rewriteContentLinks,
+        public array $languageFronts,
     ) {}
 
     /**
@@ -87,6 +91,7 @@ final readonly class Settings
             perPageMax: self::perPageMax($config),
             rewriteLinks: self::bool($config, 'rewrite_links', true),
             rewriteContentLinks: self::bool($config, 'rewrite_content_links', true),
+            languageFronts: self::languageFronts($config['frontend_urls'] ?? []),
         );
     }
 
@@ -141,6 +146,24 @@ final readonly class Settings
         $max = self::int($config, 'per_page_max', 100);
 
         return $max >= 1 && $max < 100 ? $max : null;
+    }
+
+    /**
+     * The front-end origin of each language, when a language has its own.
+     *
+     * @return array<string, Origin>
+     */
+    private static function languageFronts(mixed $config): array
+    {
+        $fronts = [];
+
+        foreach (is_array($config) ? $config : [] as $code => $url) {
+            if (is_string($code) && is_string($url) && trim($url) !== '') {
+                $fronts[$code] = Origin::fromUrl($url);
+            }
+        }
+
+        return $fronts;
     }
 
     private static function mode(string $value, bool $hasFront): FrontMode

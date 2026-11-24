@@ -11,6 +11,10 @@ return [
     // Where the JS front end lives (https://www.example.com). Empty: the package leaves the front as it is.
     'frontend_url' => env('HEADLESS_FRONTEND_URL', ''),
 
+    // A multilingual site (Polylang, WPML) may serve each language from its own front end: language code => URL.
+    // A language that is not listed uses frontend_url.
+    'frontend_urls' => [],
+
     // What the public front of WordPress does: redirect | page | json | off. Empty: redirect when a front URL is set, off otherwise.
     'mode' => env('HEADLESS_MODE', ''),
 

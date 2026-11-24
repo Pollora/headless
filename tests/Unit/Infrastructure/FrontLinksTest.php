@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 use Brain\Monkey\Filters;
 use Pollora\Headless\Domain\Content\ContentLinks;
+use Pollora\Headless\Domain\Front\FrontUrls;
 use Pollora\Headless\Domain\Front\Origin;
 use Pollora\Headless\Domain\Front\UrlMapper;
+use Pollora\Headless\Domain\Language\Languages;
 use Pollora\Headless\Infrastructure\WordPress\FrontLinks;
 use Pollora\Headless\Infrastructure\WordPress\WordPressHooks;
 
@@ -39,4 +41,32 @@ it('moves the links of the content', function (): void {
     expect(linksModule()->content('<a href="https://cms.example.com/about/">a</a>'))->toBe('<a href="https://www.example.com/about/">a</a>')
         ->and(linksModule()->content(['not html']))->toBe(['not html'])
         ->and(linksModule(false)->content('<a href="https://cms.example.com/about/">a</a>'))->toBe('<a href="https://cms.example.com/about/">a</a>');
+});
+
+it('maps the permalink of a post with the language of that post', function (): void {
+    $calls = [];
+    $urls = new class($calls) implements FrontUrls
+    {
+        /** @param array<int, array{string, ?string}> $calls */
+        public function __construct(private array &$calls) {}
+
+        public function toFront(string $url, ?string $language = null): string
+        {
+            $this->calls[] = [$url, $language];
+
+            return 'mapped';
+        }
+    };
+    $languages = Mockery::mock(Languages::class);
+    $languages->shouldReceive('ofPost')->with(12)->andReturn('fr');
+    $module = new FrontLinks($urls, null, $languages);
+
+    $post = Mockery::mock('WP_Post');
+    $post->ID = 12;
+
+    expect($module->postLink('https://cms.example.com/a/', $post))->toBe('mapped')
+        ->and($module->postLink('https://cms.example.com/b/', 12))->toBe('mapped')
+        ->and($module->postLink('https://cms.example.com/c/', null))->toBe('mapped')
+        ->and($module->postLink(false, 12))->toBeFalse()
+        ->and($calls)->toBe([['https://cms.example.com/a/', 'fr'], ['https://cms.example.com/b/', 'fr'], ['https://cms.example.com/c/', null]]);
 });

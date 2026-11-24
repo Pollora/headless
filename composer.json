@@ -31,7 +31,8 @@
         "php-stubs/wp-cli-stubs": "^2.12",
         "phpstan/phpstan": "^2.1.16",
         "pollora/harness": "^0.1.35",
-        "szepeviktor/phpstan-wordpress": "^2.0"
+        "szepeviktor/phpstan-wordpress": "^2.0",
+        "wpsyntex/polylang-stubs": "^3.7"
     },
     "suggest": {
         "illuminate/support": "Loads the package by itself inside a Pollora (Laravel) project, through the service provider.",

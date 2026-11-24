@@ -40,3 +40,28 @@ it('ignores a setting of the wrong type', function (): void {
 it('refuses an unknown mode or redirect status, naming the choices', function (string $key, string $value): void {
     Settings::fromArray(['frontend_url' => 'https://www.example.com', $key => $value], BACKEND);
 })->throws(InvalidSettingsException::class)->with([['mode', 'maybe'], ['redirect_status', '303']]);
+
+it('reads the front end of each language', function (): void {
+    $settings = Settings::fromArray(['frontend_url' => 'https://www.example.com', 'frontend_urls' => ['fr' => 'https://www.example.fr', 'de' => '', 5 => 'https://x.test', 'es' => 12]], BACKEND);
+
+    expect(array_keys($settings->languageFronts))->toBe(['fr'])
+        ->and($settings->languageFronts['fr']->toString())->toBe('https://www.example.fr');
+});
+
+it('reads the CORS, cache and link settings', function (): void {
+    $settings = Settings::fromArray(['frontend_url' => 'https://www.example.com', 'cors' => ['origins' => ['https://*.example.com'], 'credentials' => true], 'rest_cache' => ['max_age' => 5], 'per_page_max' => 20, 'rewrite_links' => false], BACKEND);
+
+    expect($settings->cors?->allows('https://app.example.com'))->toBeTrue()
+        ->and($settings->cors?->allows('https://www.example.com'))->toBeTrue()
+        ->and($settings->restCache?->cacheControl('GET', 200, false, false, '/wp/v2/posts'))->toContain('max-age=5')
+        ->and($settings->perPageMax)->toBe(20)
+        ->and($settings->rewriteLinks)->toBeFalse();
+});
+
+it('leaves CORS, the cache and the ceiling off without a front end or when switched off', function (): void {
+    $bare = Settings::fromArray([], BACKEND);
+    $off = Settings::fromArray(['frontend_url' => 'https://www.example.com', 'cors' => ['enabled' => false], 'rest_cache' => ['enabled' => false], 'per_page_max' => 100], BACKEND);
+
+    expect($bare->cors)->toBeNull()->and($bare->restCache)->toBeNull()->and($bare->perPageMax)->toBeNull()
+        ->and($off->cors)->toBeNull()->and($off->restCache)->toBeNull()->and($off->perPageMax)->toBeNull();
+});
