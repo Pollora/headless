@@ -115,4 +115,10 @@ return [
         // More options whose change is announced, on top of the title, the permalinks, the front page and a few more.
         'options' => [],
     ],
+
+    // GET /wp-json/headless/v1/site: the site, its languages, its menus as trees (with front-end paths), the front page and the
+    // content types in one answer, public and cacheable. Only active once a front-end URL is set.
+    'manifest' => [
+        'enabled' => true,
+    ],
 ];

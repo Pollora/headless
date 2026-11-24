@@ -23,6 +23,7 @@ It works on a classic WordPress, on Bedrock and inside a [Pollora](https://pollo
 | API tokens | `wp headless token create <user> --scopes=read --routes=/wp/v2/posts --expires=90d`: `Authorization: Bearer hl.…`, as the user, limited to read or write and to route prefixes. Only a hash is stored; a wrong token answers 401, a request outside the scopes 403. `rotate` keeps the old token alive for a grace period. |
 | Preview | The editor's Preview button opens your front end with a one-time token; the front end trades it for a session and reads the draft, scheduled or private post, with the editor's latest autosave laid over it. See [Preview](#preview-from-your-front-end). |
 | Revalidation | When a post is published, updated, unpublished or deleted, or a term, a menu, a site option or a file changes, the front end is told: one signed POST, merged with the other changes of the last seconds, sent off the request, tried again if it fails. See [Revalidation](#telling-your-front-end-what-changed). |
+| Site manifest | `GET /wp-json/headless/v1/site`: the site and its languages, the menus as trees with front-end paths, the menu locations, the front page and the content types with their REST routes, in one public, cacheable answer. |
 | URL mapper | `UrlMapper::toFront()` turns a URL of the WordPress site into the URL of the same page on the front end. It is the one place every URL the package hands out goes through. |
 
 Nothing changes on the public site until you set the front-end URL: a site that is not told where its front end lives is never locked.
@@ -138,6 +139,17 @@ export async function POST(request) {
 ```
 
 Nuxt, Astro, SvelteKit or Express work the same way: verify, then purge whatever your framework caches by tag or by path.
+
+## Reading the site once
+
+```js
+const site = await (await fetch('https://cms.example.com/wp-json/headless/v1/site')).json();
+site.menus.find((m) => m.slug === 'main').items; // [{ id, title, url, path: '/about/', target, classes, type, object, object_id, children: [...] }]
+site.locations;   // [{ location: 'primary', description: 'Primary Menu', menu: 'main' }]
+site.post_types;  // [{ name: 'post', rest_base: 'posts', rest_namespace: 'wp/v2', has_archive, rewrite_slug, ... }]
+```
+
+`path` is the address on your front end (`null` for a link to another site). The answer is the same until the site changes, so it carries an `ETag`; revalidate it on the `menus`, `options` and `site:<id>` tags of the [notifications](#telling-your-front-end-what-changed).
 
 ## Roadmap
 
