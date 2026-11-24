@@ -174,4 +174,11 @@ return [
     'search' => [
         'enabled' => true,
     ],
+
+    // The forms of the site and how to send them: GET /wp-json/headless/v1/forms, then /forms/cf7/12 for the fields (name, type, required,
+    // choices) and where to post them. Contact Form 7 is supported; the plugin itself takes the submission. The filter
+    // `headless/forms/providers` adds an adapter for another form plugin.
+    'forms' => [
+        'enabled' => true,
+    ],
 ];

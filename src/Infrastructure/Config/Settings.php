@@ -69,6 +69,7 @@ final readonly class Settings
         public bool $seo,
         public ?GraphQlPolicy $graphql,
         public bool $search,
+        public bool $forms,
     ) {}
 
     /**
@@ -136,6 +137,7 @@ final readonly class Settings
             seo: $front instanceof Origin && self::bool(is_array($config['seo'] ?? null) ? $config['seo'] : [], 'enabled', true),
             graphql: self::graphql($config['graphql'] ?? null),
             search: $front instanceof Origin && self::bool(is_array($config['search'] ?? null) ? $config['search'] : [], 'enabled', true),
+            forms: self::bool(is_array($config['forms'] ?? null) ? $config['forms'] : [], 'enabled', true),
         );
     }
 

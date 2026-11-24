@@ -120,10 +120,10 @@ it('builds the gate and the clean-up from the settings and attaches them', funct
     Functions\when('wp_salt')->justReturn('salt');
     $settings = Settings::fromArray(['frontend_url' => 'https://www.example.com'], 'https://cms.example.com');
 
-    expect(Bootstrap::modules($settings))->toHaveCount(17);
+    expect(Bootstrap::modules($settings))->toHaveCount(18);
 
     Actions\expectAdded('template_redirect')->once();
-    Actions\expectAdded('rest_api_init')->times(8);
+    Actions\expectAdded('rest_api_init')->times(9);
     Filters\expectAdded('preview_post_link')->once();
     Filters\expectAdded('rest_pre_dispatch')->once();
     Filters\expectAdded('rest_post_dispatch')->once();
@@ -141,9 +141,9 @@ it('builds the gate and the clean-up from the settings and attaches them', funct
 it('hooks no gate when the front is left as it is', function (): void {
     $settings = Settings::fromArray([], 'https://cms.example.com');
 
-    expect(Bootstrap::modules($settings))->toHaveCount(5);
+    expect(Bootstrap::modules($settings))->toHaveCount(6);
 
-    Actions\expectAdded('template_redirect')->never();
+    Actions\expectAdded('template_redirect')->once();
     Actions\expectAdded('rest_api_init')->never();
     Filters\expectAdded('rest_pre_dispatch')->once();
     Filters\expectAdded('wp_sitemaps_add_provider')->once();

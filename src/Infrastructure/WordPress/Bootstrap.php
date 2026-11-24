@@ -17,6 +17,7 @@ use Pollora\Headless\Domain\Language\LanguageUrls;
 use Pollora\Headless\Domain\Media\MediaUrls;
 use Pollora\Headless\Infrastructure\Config\Settings;
 use Pollora\Headless\Infrastructure\Config\SettingsLoader;
+use Pollora\Headless\Infrastructure\Form\ContactForm7Provider;
 use Pollora\Headless\Infrastructure\Language\LanguagesFactory;
 use Pollora\Headless\Infrastructure\Language\NoLanguages;
 use Pollora\Headless\Infrastructure\Redirect\OldSlugRedirects;
@@ -131,6 +132,10 @@ final class Bootstrap
                 ? new LanguageUrls($settings->urls, $settings->backend, $settings->front, $settings->languageFronts, $languages)
                 : $settings->urls;
             $modules[] = new SearchRoutes($searchUrls, $languages, $settings->perPageMax ?? 50);
+        }
+
+        if ($settings->forms) {
+            $modules[] = new FormRoutes(ContactForm7Provider::isAvailable() ? [new ContactForm7Provider] : []);
         }
 
         if ($settings->blocks) {
