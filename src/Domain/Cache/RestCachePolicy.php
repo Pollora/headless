@@ -21,7 +21,7 @@ final readonly class RestCachePolicy
         private int $maxAge = 60,
         private int $sharedMaxAge = 300,
         private int $staleWhileRevalidate = 60,
-        private array $namespaces = ['/wp/v2'],
+        private array $namespaces = ['/wp/v2', '/headless/v1/site', '/headless/v1/redirects', '/headless/v1/media'],
         private array $neverRoutes = ['/wp/v2/users/me', '/wp/v2/settings', '/wp/v2/block-renderer', '/wp/v2/search'],
     ) {}
 

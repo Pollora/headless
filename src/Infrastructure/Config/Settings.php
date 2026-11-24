@@ -59,6 +59,7 @@ final readonly class Settings
         public int $revalidationDebounce,
         public int $revalidationAttempts,
         public array $revalidationOptions,
+        public bool $manifest,
     ) {}
 
     /**
@@ -116,6 +117,7 @@ final readonly class Settings
             revalidationDebounce: max(0, self::int($revalidation, 'debounce', 3)),
             revalidationAttempts: min(5, max(1, self::int($revalidation, 'max_attempts', 5))),
             revalidationOptions: array_values(array_unique([...ChangeWatcher::defaultOptions(), ...self::strings($revalidation, 'options')])),
+            manifest: $front instanceof Origin && self::bool(is_array($config['manifest'] ?? null) ? $config['manifest'] : [], 'enabled', true),
         );
     }
 

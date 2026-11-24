@@ -12,6 +12,7 @@ use Pollora\Headless\Domain\Cors\CorsPolicy;
 use Pollora\Headless\Domain\Front\Origin;
 use Pollora\Headless\Domain\Front\UrlMapper;
 use Pollora\Headless\Domain\Language\Languages;
+use Pollora\Headless\Domain\Language\LanguageUrls;
 use Pollora\Headless\Infrastructure\Config\Settings;
 use Pollora\Headless\Infrastructure\Config\SettingsLoader;
 use Pollora\Headless\Infrastructure\Language\LanguagesFactory;
@@ -88,6 +89,13 @@ final class Bootstrap
             $revalidator = RevalidatorFactory::fromSettings($settings);
             $modules[] = new ChangeWatcher($revalidator, $languages, $settings->revalidationOptions);
             $modules[] = new RevalidationRunner($revalidator);
+        }
+
+        if ($settings->manifest && $settings->urls instanceof UrlMapper && $settings->front instanceof Origin) {
+            $urls = $languages->isActive()
+                ? new LanguageUrls($settings->urls, $settings->backend, $settings->front, $settings->languageFronts, $languages)
+                : $settings->urls;
+            $modules[] = new ManifestRoutes(new SiteManifest($urls, $settings->front, $languages));
         }
 
         if ($settings->restCache instanceof RestCachePolicy || $settings->perPageMax !== null) {

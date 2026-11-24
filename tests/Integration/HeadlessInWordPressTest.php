@@ -9,13 +9,16 @@ use Pollora\Headless\Domain\Front\FrontMode;
 use Pollora\Headless\Domain\Front\Origin;
 use Pollora\Headless\Domain\Front\UrlMapper;
 use Pollora\Headless\Infrastructure\Config\Settings;
+use Pollora\Headless\Infrastructure\Language\NoLanguages;
 use Pollora\Headless\Infrastructure\Status\StatusReport;
 use Pollora\Headless\Infrastructure\WordPress\Bootstrap;
 use Pollora\Headless\Infrastructure\WordPress\Cors;
 use Pollora\Headless\Infrastructure\WordPress\FrontLinks;
+use Pollora\Headless\Infrastructure\WordPress\ManifestRoutes;
 use Pollora\Headless\Infrastructure\WordPress\RestPerformance;
 use Pollora\Headless\Infrastructure\WordPress\RestSecurity;
 use Pollora\Headless\Infrastructure\WordPress\SiteContext;
+use Pollora\Headless\Infrastructure\WordPress\SiteManifest;
 use Pollora\Headless\Infrastructure\WordPress\TemplateRedirectGate;
 use Pollora\Headless\Infrastructure\WordPress\WordPressHooks;
 
@@ -243,4 +246,64 @@ it('lowers per_page before WordPress validates it', function (): void {
 
     expect($response->get_status())->toBe(200)
         ->and(count($response->get_data()))->toBeLessThanOrEqual(3);
+});
+
+function manifestRequest(): WP_REST_Response
+{
+    $mapper = new UrlMapper(Origin::fromUrl(home_url()), Origin::fromUrl('https://www.example.com'));
+    $manifest = new SiteManifest($mapper, Origin::fromUrl('https://www.example.com'), new NoLanguages);
+    (new ManifestRoutes($manifest))->register(new WordPressHooks);
+
+    $GLOBALS['wp_rest_server'] = null;
+    rest_get_server();
+
+    return rest_do_request(new WP_REST_Request('GET', '/headless/v1/site'));
+}
+
+it('serves the manifest of the site to a visitor: menus as trees with front-end paths, locations, content types', function (): void {
+    register_nav_menu('headless_primary', 'Primary (test)');
+    $page = wp_insert_post(['post_title' => 'About Us', 'post_type' => 'page', 'post_status' => 'publish', 'post_name' => 'about-us']);
+    $menu = wp_create_nav_menu('Headless Main');
+    $parent = wp_update_nav_menu_item($menu, 0, ['menu-item-title' => 'About', 'menu-item-object' => 'page', 'menu-item-object-id' => $page, 'menu-item-type' => 'post_type', 'menu-item-status' => 'publish', 'menu-item-position' => 1]);
+    wp_update_nav_menu_item($menu, 0, ['menu-item-title' => 'Docs', 'menu-item-url' => home_url('/docs/'), 'menu-item-type' => 'custom', 'menu-item-status' => 'publish', 'menu-item-parent-id' => $parent, 'menu-item-position' => 2]);
+    wp_update_nav_menu_item($menu, 0, ['menu-item-title' => 'Elsewhere', 'menu-item-url' => 'https://other.example.org/x', 'menu-item-type' => 'custom', 'menu-item-status' => 'publish', 'menu-item-position' => 3]);
+    set_theme_mod('nav_menu_locations', ['headless_primary' => $menu]);
+    wp_set_current_user(0);
+
+    $response = manifestRequest();
+    $data = $response->get_data();
+    $main = array_values(array_filter($data['menus'], static fn (array $m): bool => $m['slug'] === 'headless-main'))[0];
+    $location = array_values(array_filter($data['locations'], static fn (array $l): bool => $l['location'] === 'headless_primary'))[0];
+
+    set_theme_mod('nav_menu_locations', []);
+    wp_delete_nav_menu($menu);
+    wp_delete_post($page, true);
+    unregister_nav_menu('headless_primary');
+
+    expect($response->get_status())->toBe(200)
+        ->and($data['version'])->toBe(1)
+        ->and($data['site']['url'])->toBe('https://www.example.com')
+        ->and($data['site']['wordpress_url'])->toBe(home_url())
+        ->and($data['site']['multisite'])->toBeFalse()
+        ->and($main['items'])->toHaveCount(2)
+        ->and($main['items'][0]['title'])->toBe('About')
+        ->and($main['items'][0]['url'])->toStartWith('https://www.example.com/')
+        ->and($main['items'][0]['path'])->toStartWith('/')
+        ->and($main['items'][0]['object_id'])->toBe($page)
+        ->and($main['items'][0]['children'])->toHaveCount(1)
+        ->and($main['items'][0]['children'][0]['url'])->toBe('https://www.example.com/docs/')
+        ->and($main['items'][0]['children'][0]['path'])->toBe('/docs/')
+        ->and($main['items'][1]['url'])->toBe('https://other.example.org/x')
+        ->and($main['items'][1]['path'])->toBeNull()
+        ->and($location)->toMatchArray(['menu' => 'headless-main', 'description' => 'Primary (test)'])
+        ->and(array_column($data['post_types'], 'name'))->toContain('post', 'page')
+        ->and(array_column($data['taxonomies'], 'name'))->toContain('category', 'post_tag')
+        ->and($data['post_types'][array_search('post', array_column($data['post_types'], 'name'), true)])->toMatchArray(['rest_base' => 'posts', 'rest_namespace' => 'wp/v2']);
+});
+
+it('answers the manifest the same twice, so that its ETag holds', function (): void {
+    $first = manifestRequest()->get_data();
+    $second = manifestRequest()->get_data();
+
+    expect(json_encode($second))->toBe(json_encode($first));
 });
