@@ -19,4 +19,5 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 - Front-end links: permalinks and content links point to the front end.
 - Multilingual sites: Polylang and WPML, a front end per language (`frontend_urls`).
 - API tokens with scopes, routes, expiry and rotation (`wp headless token`).
+- Preview of drafts, scheduled and private posts from the front end: one-time link token, session, `GET /wp-json/headless/v1/preview/posts/{id}` (autosave, live or revision).
 - mu-plugin loader (`stubs/pollora-headless.php`) and a Pollora service provider discovered by Composer.

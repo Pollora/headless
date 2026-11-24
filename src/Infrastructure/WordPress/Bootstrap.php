@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Pollora\Headless\Infrastructure\WordPress;
 
+use Pollora\Headless\Application\Preview\PreviewService;
 use Pollora\Headless\Application\Token\TokenService;
 use Pollora\Headless\Domain\Cache\RestCachePolicy;
 use Pollora\Headless\Domain\Content\ContentLinks;
 use Pollora\Headless\Domain\Cors\CorsPolicy;
+use Pollora\Headless\Domain\Front\Origin;
 use Pollora\Headless\Domain\Front\UrlMapper;
 use Pollora\Headless\Domain\Language\Languages;
 use Pollora\Headless\Infrastructure\Config\Settings;
@@ -66,6 +68,19 @@ final class Bootstrap
 
         if ($settings->apiTokens) {
             $modules[] = new TokenAuthentication(new TokenService(new UserMetaTokenStore));
+        }
+
+        if ($settings->previewUrl !== null && $settings->front instanceof Origin) {
+            $service = new PreviewService(
+                new TransientPreviewStore,
+                new WordPressPostAccess,
+                $settings->previewSecret ?? hash_hmac('sha256', 'pollora-headless-preview', wp_salt('auth').wp_salt('secure_auth')),
+                $settings->front->toString(),
+                $settings->previewLinkTtl,
+                $settings->previewSessionTtl,
+            );
+            $modules[] = new PreviewLinks($service, $settings->previewUrl);
+            $modules[] = new PreviewRoutes($service, new PreviewPostResponse);
         }
 
         if ($settings->restCache instanceof RestCachePolicy || $settings->perPageMax !== null) {

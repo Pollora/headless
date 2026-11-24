@@ -26,6 +26,11 @@ final class SettingsLoader
         $config = defined('HEADLESS_CONFIG') && is_array(HEADLESS_CONFIG) ? HEADLESS_CONFIG : [];
         $frontendUrl = defined('HEADLESS_FRONTEND_URL') && is_string(HEADLESS_FRONTEND_URL) ? HEADLESS_FRONTEND_URL : null;
 
+        // The short form of the signing secret, kept out of the settings array that may be printed or committed
+        if (defined('HEADLESS_SECRET') && is_string(HEADLESS_SECRET) && HEADLESS_SECRET !== '') {
+            $config['preview'] = [...(is_array($config['preview'] ?? null) ? $config['preview'] : []), 'secret' => HEADLESS_SECRET];
+        }
+
         return Settings::fromArray(self::merge($config, $frontendUrl, $siteId), $backendUrl);
     }
 
