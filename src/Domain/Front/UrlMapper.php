@@ -12,14 +12,14 @@ namespace Pollora\Headless\Domain\Front;
  * are kept. Every URL the package hands out goes through here, so the rule lives
  * in one place.
  */
-final readonly class UrlMapper
+final readonly class UrlMapper implements FrontUrls
 {
     public function __construct(
         private Origin $backend,
         private Origin $front,
     ) {}
 
-    public function toFront(string $url): string
+    public function toFront(string $url, ?string $language = null): string
     {
         $parts = parse_url($url);
 

@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Pollora\Headless\Infrastructure\WordPress;
 
+use Pollora\Headless\Domain\Cache\RestCachePolicy;
+use Pollora\Headless\Domain\Content\ContentLinks;
 use Pollora\Headless\Domain\Cors\CorsPolicy;
+use Pollora\Headless\Domain\Front\UrlMapper;
 use Pollora\Headless\Infrastructure\Config\Settings;
 use Pollora\Headless\Infrastructure\Config\SettingsLoader;
 
@@ -54,6 +57,17 @@ final class Bootstrap
 
         if ($settings->cors instanceof CorsPolicy) {
             $modules[] = new Cors($settings->cors);
+        }
+
+        if ($settings->restCache instanceof RestCachePolicy || $settings->perPageMax !== null) {
+            $modules[] = new RestPerformance($settings->restCache, $settings->perPageMax);
+        }
+
+        if ($settings->urls instanceof UrlMapper && $settings->rewriteLinks) {
+            $modules[] = new FrontLinks(
+                $settings->urls,
+                $settings->rewriteContentLinks ? new ContentLinks($settings->urls, basePath: $settings->basePath) : null,
+            );
         }
 
         if ($settings->gate->isActive()) {

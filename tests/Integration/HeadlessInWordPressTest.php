@@ -2,12 +2,18 @@
 
 declare(strict_types=1);
 
+use Pollora\Headless\Domain\Cache\RestCachePolicy;
+use Pollora\Headless\Domain\Content\ContentLinks;
 use Pollora\Headless\Domain\Cors\CorsPolicy;
 use Pollora\Headless\Domain\Front\FrontMode;
+use Pollora\Headless\Domain\Front\Origin;
+use Pollora\Headless\Domain\Front\UrlMapper;
 use Pollora\Headless\Infrastructure\Config\Settings;
 use Pollora\Headless\Infrastructure\Status\StatusReport;
 use Pollora\Headless\Infrastructure\WordPress\Bootstrap;
 use Pollora\Headless\Infrastructure\WordPress\Cors;
+use Pollora\Headless\Infrastructure\WordPress\FrontLinks;
+use Pollora\Headless\Infrastructure\WordPress\RestPerformance;
 use Pollora\Headless\Infrastructure\WordPress\RestSecurity;
 use Pollora\Headless\Infrastructure\WordPress\SiteContext;
 use Pollora\Headless\Infrastructure\WordPress\TemplateRedirectGate;
@@ -180,4 +186,54 @@ it('leaves the users provider out of the core sitemap', function (): void {
 
     expect(apply_filters('wp_sitemaps_add_provider', new stdClass, 'users'))->toBeFalse()
         ->and(apply_filters('wp_sitemaps_add_provider', 'posts-provider', 'posts'))->toBe('posts-provider');
+});
+
+it('points the permalinks, the REST link and the links of the content to the front end', function (): void {
+    $mapper = new UrlMapper(
+        Origin::fromUrl(home_url()),
+        Origin::fromUrl('https://www.example.com'),
+    );
+    (new FrontLinks($mapper, new ContentLinks($mapper)))->register(new WordPressHooks);
+
+    $id = wp_insert_post([
+        'post_title' => 'Headless link test',
+        'post_status' => 'publish',
+        'post_content' => '<p><a href="'.home_url('/about/').'">About</a> <a href="'.content_url('/uploads/a.pdf').'">File</a></p>',
+    ]);
+
+    $link = get_permalink($id);
+    $api = rest_do_request(new WP_REST_Request('GET', '/wp/v2/posts/'.$id));
+    $rendered = $api->get_data()['content']['rendered'];
+    wp_delete_post($id, true);
+
+    expect($link)->toStartWith('https://www.example.com/')
+        ->and($api->get_data()['link'])->toStartWith('https://www.example.com/')
+        ->and($rendered)->toContain('href="https://www.example.com/about/"')
+        ->and($rendered)->toContain('href="'.content_url('/uploads/a.pdf').'"');
+});
+
+it('marks a public REST answer as cacheable, and not a logged-in one', function (): void {
+    (new RestPerformance(new RestCachePolicy, null))->register(new WordPressHooks);
+
+    wp_set_current_user(0);
+    $public = rest_do_request(new WP_REST_Request('GET', '/wp/v2/posts'));
+
+    $administrator = get_users(['role' => 'administrator', 'number' => 1])[0];
+    wp_set_current_user($administrator->ID);
+    $private = rest_do_request(new WP_REST_Request('GET', '/wp/v2/posts'));
+    wp_set_current_user(0);
+
+    expect($public->get_headers()['Cache-Control'] ?? '')->toStartWith('public, max-age=60')
+        ->and($private->get_headers())->not->toHaveKey('Cache-Control');
+});
+
+it('lowers per_page before WordPress validates it', function (): void {
+    (new RestPerformance(null, 3))->register(new WordPressHooks);
+
+    $request = new WP_REST_Request('GET', '/wp/v2/posts');
+    $request->set_param('per_page', 100);
+    $response = rest_do_request($request);
+
+    expect($response->get_status())->toBe(200)
+        ->and(count($response->get_data()))->toBeLessThanOrEqual(3);
 });
