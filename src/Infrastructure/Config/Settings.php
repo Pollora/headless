@@ -122,7 +122,7 @@ final readonly class Settings
             languageFronts: self::languageFronts($config['frontend_urls'] ?? []),
             apiTokens: self::bool(is_array($config['tokens'] ?? null) ? $config['tokens'] : [], 'enabled', true),
             previewUrl: self::previewUrl($preview, $front),
-            previewSecret: self::string($preview, 'secret') !== '' ? self::string($preview, 'secret') : null,
+            previewSecret: self::secret($preview),
             previewLinkTtl: max(30, self::int($preview, 'link_ttl', 300)),
             previewSessionTtl: max(60, self::int($preview, 'session_ttl', 1800)),
             revalidationTargets: self::targets($revalidation),
@@ -141,6 +141,28 @@ final readonly class Settings
             forms: self::bool(is_array($config['forms'] ?? null) ? $config['forms'] : [], 'enabled', true),
             restPluginFilter: self::bool(is_array($config['rest_plugins'] ?? null) ? $config['rest_plugins'] : [], 'enabled', false),
         );
+    }
+
+    /**
+     * The signing secret of the preview, null when it is left to the salts of the site.
+     *
+     * @param  array<string, mixed>  $preview
+     *
+     * @throws InvalidSettingsException when it is too short to resist guessing
+     */
+    private static function secret(array $preview): ?string
+    {
+        $secret = self::string($preview, 'secret');
+
+        if ($secret === '') {
+            return null;
+        }
+
+        if (strlen($secret) < 32) {
+            throw InvalidSettingsException::tooShort('preview.secret', 32);
+        }
+
+        return $secret;
     }
 
     /**

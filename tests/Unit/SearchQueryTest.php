@@ -34,7 +34,8 @@ it('keeps a language of the site only', function (): void {
 });
 
 it('bounds the page and its size', function (): void {
-    expect(searchQuery(page: -4)?->page)->toBe(1)
+    expect(searchQuery(page: 99999)?->page)->toBe(SearchQuery::MAX_PAGE)
+        ->and(searchQuery(page: -4)?->page)->toBe(1)
         ->and(searchQuery(page: 3)?->page)->toBe(3)
         ->and(searchQuery(perPage: 0)?->perPage)->toBe(SearchQuery::DEFAULT_PER_PAGE)
         ->and(searchQuery(perPage: 500)?->perPage)->toBe(50)

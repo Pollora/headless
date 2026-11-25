@@ -21,7 +21,7 @@ wp() { php -d memory_limit=1G /usr/local/bin/wp "$@"; }
 cd /var/www/html
 tar xzf /wp.tar.gz --strip-components=1
 wp config create --allow-root --dbhost=hl-e2e-mysql --dbname=wordpress --dbuser=root --skip-check --quiet --extra-php <<PHP
-define("HEADLESS_CONFIG", ["frontend_url" => "https://www.example.com", "preview" => ["url" => "https://www.example.com/api/preview", "secret" => "e2e-secret"]]);
+define("HEADLESS_CONFIG", ["frontend_url" => "https://www.example.com", "preview" => ["url" => "https://www.example.com/api/preview", "secret" => "e2e-secret-e2e-secret-e2e-secret-0123"]]);
 define("DISABLE_WP_CRON", true);
 PHP
 wp core install --allow-root --url=http://localhost:8080 --title=e2e --admin_user=admin --admin_password=pass --admin_email=a@a.test --skip-email --quiet

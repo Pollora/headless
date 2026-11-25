@@ -16,6 +16,9 @@ final readonly class SearchQuery
 
     public const int DEFAULT_PER_PAGE = 10;
 
+    /** Deep pages cost a scan of every result before them, and nobody reads page 5000 of a search */
+    public const int MAX_PAGE = 100;
+
     /**
      * @param  list<string>  $types  the content types to look in: the ones asked for that the site exposes, or all of those it exposes
      */
@@ -47,7 +50,7 @@ final readonly class SearchQuery
             mb_substr($term, 0, self::MAX_LENGTH),
             $kept,
             $language,
-            max(1, $page),
+            min(max(1, $page), self::MAX_PAGE),
             min(max(1, $perPage > 0 ? $perPage : self::DEFAULT_PER_PAGE), max(1, $maxPerPage)),
         );
     }

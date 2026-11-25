@@ -36,4 +36,5 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 - `tests/E2E/run.sh`: the contract checked over real HTTP.
 - Fixed: a wrong `hl.` token was served as an anonymous request instead of answering 401 (WordPress works the user out lazily).
 - Fixed: `wp headless theme install` was refused by WP-CLI (the action was not in the command's synopsis).
+- Security review of the package, with these fixes: a redirect rule can no longer send a visitor to another site through `$1` (`/go/(.*)` to `/$1`), rules that repeat a repetition (`(a+)+`) are refused, the resolve route takes paths of 512 characters at most, the front gate sees `/wp-admin/../` as the home page, a rotated token never outlives the expiry it had, a preview token only opens posts of the site that made it (multisite), `preview.secret` must have 32 characters at least (the site refuses to start with a shorter one), search pages stop at 100.
 - mu-plugin loader (`stubs/pollora-headless.php`) and a Pollora service provider discovered by Composer.

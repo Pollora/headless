@@ -104,7 +104,8 @@ final readonly class TokenService
         $old = $this->owned($userId, $id);
         $issued = $this->create($userId, $old->name, $old->scopes, $old->routes, $old->expiresAt === null ? null : max(0, $old->expiresAt - ($this->clock)()));
 
-        $this->store->save($old->expiringAt(($this->clock)() + $grace));
+        // The grace period never makes a token outlive the expiry it already had
+        $this->store->save($old->expiringAt(min($old->expiresAt ?? PHP_INT_MAX, ($this->clock)() + $grace)));
 
         return $issued;
     }

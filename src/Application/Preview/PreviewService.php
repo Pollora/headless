@@ -69,10 +69,11 @@ final readonly class PreviewService
      * @throws PreviewForbiddenException when the user can no longer edit the post
      * @throws PreviewNotFoundException when the post is gone
      */
-    public function exchange(string $linkToken): PreviewSession
+    public function exchange(string $linkToken, ?int $siteId = null): PreviewSession
     {
         $claims = TokenSigner::verify($linkToken, $this->key, ($this->clock)(), PreviewTokenType::Link);
         $this->checkAudience($claims);
+        $this->checkSite($claims, $siteId);
 
         // Burn before anything else: a token that fails the checks below is spent too
         if (! $this->store->burn($claims->id)) {
@@ -94,7 +95,7 @@ final readonly class PreviewService
      * @throws PreviewForbiddenException
      * @throws PreviewNotFoundException
      */
-    public function authorize(string $sessionToken, int $postId): PreviewClaims
+    public function authorize(string $sessionToken, int $postId, ?int $siteId = null): PreviewClaims
     {
         if (! str_starts_with($sessionToken, 'hlp.')) {
             throw PreviewTokenInvalidException::raise();
@@ -102,6 +103,7 @@ final readonly class PreviewService
 
         $claims = TokenSigner::verify(substr($sessionToken, 4), $this->key, ($this->clock)(), PreviewTokenType::Session);
         $this->checkAudience($claims);
+        $this->checkSite($claims, $siteId);
 
         if ($claims->postId !== $postId) {
             throw PreviewForbiddenException::raise();
@@ -115,6 +117,14 @@ final readonly class PreviewService
     private function claims(PreviewTokenType $type, int $userId, int $postId, int $siteId, int $ttl): PreviewClaims
     {
         return new PreviewClaims($type, $userId, $postId, $siteId, $this->audience, ($this->clock)() + $ttl, bin2hex(($this->random)(16)));
+    }
+
+    /** The keys come from the salts of the whole network: a token made on one site must not open a post of another. */
+    private function checkSite(PreviewClaims $claims, ?int $siteId): void
+    {
+        if ($siteId !== null && $claims->siteId !== $siteId) {
+            throw PreviewTokenInvalidException::raise();
+        }
     }
 
     private function checkAudience(PreviewClaims $claims): void

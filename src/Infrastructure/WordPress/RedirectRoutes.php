@@ -42,7 +42,7 @@ final readonly class RedirectRoutes implements Module
             'methods' => 'GET',
             'callback' => [$this, 'resolve'],
             'permission_callback' => '__return_true',
-            'args' => ['path' => ['type' => 'string', 'required' => true, 'pattern' => '\A/\S{0,1999}\z']],
+            'args' => ['path' => ['type' => 'string', 'required' => true, 'pattern' => '\A/\S{0,511}\z']],
         ]);
     }
 
