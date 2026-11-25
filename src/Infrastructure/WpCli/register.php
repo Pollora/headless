@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use GraphQL\Utils\SchemaPrinter;
 use Pollora\Headless\Application\Revalidation\Revalidator;
 use Pollora\Headless\Application\Token\TokenService;
 use Pollora\Headless\Domain\Front\UrlMapper;
@@ -20,6 +21,7 @@ use Pollora\Headless\Infrastructure\WordPress\UserMetaTokenStore;
 use Pollora\Headless\Infrastructure\WpCli\HeadlessCommand;
 use Pollora\Headless\Infrastructure\WpCli\RedirectCommand;
 use Pollora\Headless\Infrastructure\WpCli\RevalidateCommand;
+use Pollora\Headless\Infrastructure\WpCli\SchemaCommand;
 use Pollora\Headless\Infrastructure\WpCli\TokenCommand;
 use Pollora\Headless\Infrastructure\WpCli\WpCliOutput;
 
@@ -72,6 +74,20 @@ if (defined('WP_CLI') && WP_CLI && class_exists('WP_CLI')) {
         },
         static fn (): int => time(),
         new WpCliOutput,
+    ));
+
+    WP_CLI::add_command('headless schema', new SchemaCommand(
+        static fn (): array => rest_get_server()->get_routes(),
+        static fn (): array => ['title' => (string) get_bloginfo('name'), 'version' => (string) get_bloginfo('version'), 'server' => rest_url()],
+        static function (): ?string {
+            if (! class_exists('WPGraphQL') || ! class_exists('GraphQL\\Utils\\SchemaPrinter')) {
+                return null;
+            }
+
+            return SchemaPrinter::doPrint(WPGraphQL::get_schema());
+        },
+        new WpCliOutput,
+        static fn (string $file, string $content): bool => file_put_contents($file, $content) !== false,
     ));
 }
 

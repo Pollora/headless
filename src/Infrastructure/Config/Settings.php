@@ -12,6 +12,7 @@ use Pollora\Headless\Domain\Front\FrontMode;
 use Pollora\Headless\Domain\Front\Origin;
 use Pollora\Headless\Domain\Front\RedirectStatus;
 use Pollora\Headless\Domain\Front\UrlMapper;
+use Pollora\Headless\Domain\GraphQl\GraphQlPolicy;
 use Pollora\Headless\Domain\Revalidation\Target;
 use Pollora\Headless\Infrastructure\Exceptions\InvalidSettingsException;
 use Pollora\Headless\Infrastructure\WordPress\ChangeWatcher;
@@ -66,6 +67,9 @@ final readonly class Settings
         public ?string $mediaCdn,
         public bool $blocks,
         public bool $seo,
+        public ?GraphQlPolicy $graphql,
+        public bool $search,
+        public bool $forms,
     ) {}
 
     /**
@@ -131,6 +135,34 @@ final readonly class Settings
             mediaCdn: self::mediaCdn($media),
             blocks: $front instanceof Origin && self::bool(is_array($config['blocks'] ?? null) ? $config['blocks'] : [], 'enabled', true),
             seo: $front instanceof Origin && self::bool(is_array($config['seo'] ?? null) ? $config['seo'] : [], 'enabled', true),
+            graphql: self::graphql($config['graphql'] ?? null),
+            search: $front instanceof Origin && self::bool(is_array($config['search'] ?? null) ? $config['search'] : [], 'enabled', true),
+            forms: self::bool(is_array($config['forms'] ?? null) ? $config['forms'] : [], 'enabled', true),
+        );
+    }
+
+    /**
+     * The WPGraphQL settings to impose, or null when the module is off. A key set to null leaves that setting to WPGraphQL.
+     */
+    private static function graphql(mixed $config): ?GraphQlPolicy
+    {
+        $config = is_array($config) ? $config : [];
+
+        if (! self::bool($config, 'enabled', true)) {
+            return null;
+        }
+
+        $defaults = new GraphQlPolicy;
+        $flag = static fn (string $key, ?bool $default): ?bool => array_key_exists($key, $config) ? ($config[$key] === null ? null : self::bool($config, $key, (bool) $default)) : $default;
+        $number = static fn (string $key, ?int $default): ?int => array_key_exists($key, $config) ? ($config[$key] === null ? null : max(0, self::int($config, $key, (int) $default))) : $default;
+
+        return new GraphQlPolicy(
+            introspection: $flag('introspection', $defaults->introspection),
+            debug: $flag('debug', $defaults->debug),
+            batchLimit: $number('batch_limit', $defaults->batchLimit),
+            maxDepth: $number('max_depth', $defaults->maxDepth),
+            graphiql: $flag('graphiql', $defaults->graphiql),
+            restrictToLoggedIn: $flag('restrict_to_logged_in', $defaults->restrictToLoggedIn),
         );
     }
 

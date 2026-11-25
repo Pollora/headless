@@ -152,4 +152,33 @@ return [
     'seo' => [
         'enabled' => true,
     ],
+
+    // WPGraphQL, when the plugin is active (nothing happens otherwise). Its settings live in the database, where an editor can change
+    // them; these are imposed in code instead. Set a key to null to leave that setting to WPGraphQL. Introspection stays closed to
+    // visitors (a logged-in API token can still read the schema, and `wp headless schema graphql` writes it to a file); WPGraphQL has no
+    // query cost limit, so the batch size and the depth are capped. The CORS answer comes from the `cors` section above.
+    // An API token may call GraphQL: a token without the write scope cannot run a mutation. Preview with a token and `X-GraphQL-Preview`.
+    'graphql' => [
+        'enabled' => true,
+        'introspection' => false,
+        'debug' => false,
+        'batch_limit' => 5, // 0 turns batching off
+        'max_depth' => 15, // 0 turns the depth limit off
+        'graphiql' => null,
+        'restrict_to_logged_in' => null,
+    ],
+
+    // The search of the site in one shape: GET /wp-json/headless/v1/search?q=word&type=post,page&lang=fr&page=1&per_page=10, with each
+    // result's address on the front end, its language, a short text and its image. Public content types only, no protected post. The
+    // filter `headless/search/args` changes the WP_Query arguments. Only active once a front-end URL is set.
+    'search' => [
+        'enabled' => true,
+    ],
+
+    // The forms of the site and how to send them: GET /wp-json/headless/v1/forms, then /forms/cf7/12 for the fields (name, type, required,
+    // choices) and where to post them. Contact Form 7 is supported; the plugin itself takes the submission. The filter
+    // `headless/forms/providers` adds an adapter for another form plugin.
+    'forms' => [
+        'enabled' => true,
+    ],
 ];

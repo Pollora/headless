@@ -65,7 +65,7 @@ it('answers a preflight with methods, headers and a max age', function (): void 
 it('lists its own headers when a preflight asks for one it does not allow', function (): void {
     $decision = cors()->decide(new CorsRequest('https://www.example.com', 'OPTIONS', 'GET', 'x-evil'));
 
-    expect($decision->headers['Access-Control-Allow-Headers'])->toBe('Authorization, Content-Type, Accept, X-WP-Nonce, X-HTTP-Method-Override');
+    expect($decision->headers['Access-Control-Allow-Headers'])->toBe('Authorization, Content-Type, Accept, X-WP-Nonce, X-HTTP-Method-Override, X-GraphQL-Preview');
 });
 
 it('knows what a preflight is', function (): void {
