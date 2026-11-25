@@ -39,6 +39,9 @@ final class Bootstrap
      */
     public static function fromWordPress(): void
     {
+        // Before the plugins load: the mu-plugin runs first, and the plugins' list is read right after
+        RestPlugins::fromSettings(is_string($_SERVER['REQUEST_URI'] ?? null) ? $_SERVER['REQUEST_URI'] : '', $_GET)?->register(new WordPressHooks);
+
         // Not static: Brain Monkey binds the callbacks it records, and refuses a static closure
         $start = function (): void {
             self::boot(SettingsLoader::load(home_url(), get_current_blog_id()), new WordPressHooks);

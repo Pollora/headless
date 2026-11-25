@@ -165,6 +165,7 @@ it('starts at once when plugins are already loaded', function (): void {
 
 it('waits for plugins_loaded otherwise', function (): void {
     Functions\when('did_action')->justReturn(0);
+    Functions\when('get_current_blog_id')->justReturn(1);
     Actions\expectAdded('plugins_loaded')->once()->with(Mockery::type(Closure::class), 1);
 
     Bootstrap::fromWordPress();

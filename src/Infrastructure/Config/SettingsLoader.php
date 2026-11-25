@@ -23,6 +23,16 @@ final class SettingsLoader
      */
     public static function load(string $backendUrl, int $siteId = 1): Settings
     {
+        return Settings::fromArray(self::config($siteId), $backendUrl);
+    }
+
+    /**
+     * The settings as an array, before they are checked: usable before WordPress can tell its own address.
+     *
+     * @return array<string, mixed>
+     */
+    public static function config(int $siteId = 1): array
+    {
         $config = defined('HEADLESS_CONFIG') && is_array(HEADLESS_CONFIG) ? HEADLESS_CONFIG : [];
         // The short form of a single revalidation target
         if (defined('HEADLESS_REVALIDATE_URL') && is_string(HEADLESS_REVALIDATE_URL) && defined('HEADLESS_REVALIDATE_SECRET') && is_string(HEADLESS_REVALIDATE_SECRET)) {
@@ -38,7 +48,7 @@ final class SettingsLoader
             $config['preview'] = [...(is_array($config['preview'] ?? null) ? $config['preview'] : []), 'secret' => HEADLESS_SECRET];
         }
 
-        return Settings::fromArray(self::merge($config, $frontendUrl, $siteId), $backendUrl);
+        return self::merge($config, $frontendUrl, $siteId);
     }
 
     /**

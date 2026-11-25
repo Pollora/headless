@@ -27,6 +27,7 @@ final class Doctor
             ...self::delivery($settings, $facts),
             ...self::graphql($facts),
             ...self::redirects($facts),
+            ...($settings->restPluginFilter ? [new Check('rest-plugins', CheckLevel::Warning, 'REST requests load only the plugins you listed: any plugin left out loses its routes, types, fields and login there.', 'Check `rest_plugins.keep` after each plugin you add.')] : []),
             self::theme($facts),
             self::seo($facts),
             new Check('debug-display', $facts->debugDisplay ? CheckLevel::Warning : CheckLevel::Ok, $facts->debugDisplay ? 'PHP errors are printed in the answers.' : 'PHP errors are not printed in the answers.', $facts->debugDisplay ? 'Set WP_DEBUG_DISPLAY to false: a notice inside a JSON answer breaks the client and leaks paths.' : ''),

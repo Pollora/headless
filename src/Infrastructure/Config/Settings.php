@@ -70,6 +70,7 @@ final readonly class Settings
         public ?GraphQlPolicy $graphql,
         public bool $search,
         public bool $forms,
+        public bool $restPluginFilter,
     ) {}
 
     /**
@@ -138,6 +139,7 @@ final readonly class Settings
             graphql: self::graphql($config['graphql'] ?? null),
             search: $front instanceof Origin && self::bool(is_array($config['search'] ?? null) ? $config['search'] : [], 'enabled', true),
             forms: self::bool(is_array($config['forms'] ?? null) ? $config['forms'] : [], 'enabled', true),
+            restPluginFilter: self::bool(is_array($config['rest_plugins'] ?? null) ? $config['rest_plugins'] : [], 'enabled', false),
         );
     }
 
