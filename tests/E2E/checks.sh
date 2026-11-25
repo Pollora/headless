@@ -57,5 +57,15 @@ echo "Doctor"
 cd "$WP" && php -d memory_limit=1G /usr/local/bin/wp headless doctor --allow-root >/tmp/doctor.txt 2>&1
 check "the doctor finds nothing failing" "$(grep -c '^\[fail\]\|Error' /tmp/doctor.txt)" "0"
 
+if [ -n "$SAMPLES" ]; then
+  # SAMPLES=1 tests/E2E/run.sh prints what each route really answers, to write the contract from
+  pretty() { php -r 'echo json_encode(json_decode(stream_get_contents(STDIN)), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), "\n";'; }
+  for route in site redirects "redirects/resolve?path=/nope/" "search?q=headless" "search?q=a" forms "media/1" "preview/posts/$DRAFT"; do
+    echo "=== GET /headless/v1/$route"; curl -s -H "Authorization: Bearer $TOKEN" "$B/wp-json/headless/v1/$route" | pretty
+  done
+  echo "=== GET /wp/v2/posts/$(cat /tmp/published)?_fields=id,link,headless_blocks,headless_seo,headless_featured_media"; curl -s "$B/wp-json/wp/v2/posts/$(cat /tmp/published)?_fields=id,link,headless_blocks,headless_seo,headless_featured_media" | pretty
+  echo "=== POST preview/exchange (bad token)"; curl -s -X POST -H 'Content-Type: application/json' -d '{"token":"x"}' "$B/wp-json/headless/v1/preview/exchange" | pretty
+fi
+
 echo
 if [ "$FAILED" = 0 ]; then echo "E2E: all checks passed"; else echo "E2E: some checks failed"; cat /tmp/doctor.txt; tail -5 /tmp/server.log; exit 1; fi

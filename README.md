@@ -6,6 +6,10 @@ Prepare WordPress for headless mode: lock the public front, remove what a headle
 
 It works on a classic WordPress, on Bedrock and inside a [Pollora](https://pollora.dev) project, with the same core. Any Node application can use it: the contract is plain HTTP, no client library is needed.
 
+## The contract
+
+[docs/HTTP-CONTRACT.md](docs/HTTP-CONTRACT.md) lists every route, field, header, setting and hook a client can rely on, with the shape of each answer. From 1.0 it follows semantic versioning: nothing in it is removed or changed in a way that breaks a client before 2.0, and new keys can appear in any minor release (ignore the ones you do not know). The PHP classes are internal.
+
 ## What is in
 
 | Module | What it does |
@@ -263,7 +267,7 @@ Contact Form 7 is supported and verified against the real plugin in CI. A checkb
 
 ## Roadmap
 
-`0.1` core · `0.2` CORS, REST security and speed, URL mapping, Polylang and WPML, API tokens · `0.3` content preview · `0.4` revalidation webhooks · `0.5` site manifest, redirects, media, blocks as JSON · `0.6` SEO: Yoast, Rank Math, AIOSEO, SEOPress · `0.7` optional WPGraphQL, schema files, search and forms (this release) · `0.8` doctor, end-to-end tests · `1.0` frozen contract.
+`0.1` core · `0.2` CORS, REST security and speed, URL mapping, Polylang and WPML, API tokens · `0.3` content preview · `0.4` revalidation webhooks · `0.5` site manifest, redirects, media, blocks as JSON · `0.6` SEO: Yoast, Rank Math, AIOSEO, SEOPress · `0.7` optional WPGraphQL, schema files, search and forms · `0.8` doctor, REST plugin filter, end-to-end tests, security review · `1.0` the contract is frozen (this release).
 
 ## Quality
 
