@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Pollora\Headless\Infrastructure\Status;
 
+use Pollora\Headless\Domain\Cors\CorsPolicy;
 use Pollora\Headless\Domain\Front\Origin;
 use Pollora\Headless\Domain\Redirect\Redirect;
 use Pollora\Headless\Infrastructure\Config\Settings;
@@ -71,7 +72,7 @@ final class Doctor
     {
         $checks = [];
 
-        $checks[] = $settings->cors instanceof \Pollora\Headless\Domain\Cors\CorsPolicy
+        $checks[] = $settings->cors instanceof CorsPolicy
             ? new Check('cors', CheckLevel::Ok, 'CORS answers for the listed origins only.')
             : new Check('cors', CheckLevel::Warning, 'No CORS policy: WordPress reflects any origin and allows credentials.', 'Set the front-end URL, or list `cors.origins`.');
 
