@@ -107,6 +107,9 @@ final readonly class HeadlessCommand
      *
      * ## OPTIONS
      *
+     * <action>
+     * : `install`.
+     *
      * [--activate]
      * : Make it the active theme once installed.
      *

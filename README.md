@@ -12,7 +12,7 @@ It works on a classic WordPress, on Bedrock and inside a [Pollora](https://pollo
 | --- | --- |
 | Front gate | A request for a public page is redirected to the same path on your front end (302 by default), answered with a holding page, or with JSON. The administration, the login, `/wp-json`, `/graphql`, the cron, the uploads, `xmlrpc.php`, the sitemap and `robots.txt` are never touched; you add more with `allow`. |
 | Head clean-up | Removes the generator, RSD, shortlink, feeds, emoji, oEmbed and REST discovery from the page head and the headers, and turns XML-RPC and the pingback header off. |
-| Public surface | Feeds answer 404, the core sitemap is off (its URLs are WordPress's), and the WordPress host tells search engines not to index it (`X-Robots-Tag`, `robots.txt`, robots meta). |
+| Public surface | Feeds answer 404 (a visitor of the WordPress host is first sent to the front end like for any page), the core sitemap is off (its URLs are WordPress's), and the WordPress host tells search engines not to index it (`X-Robots-Tag`, `robots.txt`, robots meta). |
 | Empty theme | `wp headless theme install --activate` installs the one empty theme WordPress needs: without a valid theme it falls into recovery mode for administrators. |
 | Status | `wp headless status` shows the setup and what looks wrong (no front URL, a front on the same host, no theme, WP-Cron). |
 | CORS | WordPress answers any origin and allows credentials. The package answers the listed origins only (the front-end URL is always one), never `*`, with `Vary: Origin`, `https://*.example.com` patterns and preflight. |
@@ -267,7 +267,15 @@ Contact Form 7 is supported and verified against the real plugin in CI. A checkb
 
 ## Quality
 
-The repository follows the [Pollora harness](https://github.com/Pollora/harness) (profile `core`): `composer qa` runs every gate.
+The repository follows the [Pollora harness](https://github.com/Pollora/harness) (profile `core`): `composer qa` runs every gate. `tests/E2E/run.sh` (Docker) starts a throwaway WordPress with the package as a mu-plugin and checks the contract over real HTTP with `curl`: the gate, CORS, caching, tokens, preview, search, the doctor.
+
+## Doctor
+
+`wp headless doctor` looks at the running site and says what exposes it or breaks the front end, with the fix for each finding (`--format=json` for a script; it exits with an error when a check fails): the front-end URL and HTTPS, CORS, the users route as a visitor sees it, a locked REST API, plain permalinks, preview, revalidation and its cron, WPGraphQL introspection, redirect loops and chains, the theme, displayed PHP errors.
+
+## Loading fewer plugins on REST requests
+
+Advanced and off by default: `rest_plugins => ['enabled' => true, 'keep' => ['advanced-custom-fields', 'wordpress-seo/wp-seo.php']]` loads only the listed plugins (a folder or a file) when the request is for `/wp-json/`. The API gets faster, but a plugin left out loses every route, post type, field and login it adds on those requests: list each one that adds any. Classic WordPress and Bedrock only (the mu-plugin reads it before the plugins load); plugins activated for a whole network are not touched.
 
 ## License
 

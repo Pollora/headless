@@ -31,4 +31,9 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 - `GET /wp-json/headless/v1/search`: the site search in one shape, with front-end addresses (`headless/search/args` filter).
 - `GET /wp-json/headless/v1/forms` and `/forms/{provider}/{id}`: forms and how to send them, from Contact Form 7 (`headless/forms/providers` filter for other plugins).
 - `X-GraphQL-Preview` among the request headers CORS allows.
+- `wp headless doctor`: checks on the running site, with the fix for each finding.
+- `rest_plugins`: load only the listed plugins on REST requests (advanced, off by default).
+- `tests/E2E/run.sh`: the contract checked over real HTTP.
+- Fixed: a wrong `hl.` token was served as an anonymous request instead of answering 401 (WordPress works the user out lazily).
+- Fixed: `wp headless theme install` was refused by WP-CLI (the action was not in the command's synopsis).
 - mu-plugin loader (`stubs/pollora-headless.php`) and a Pollora service provider discovered by Composer.
