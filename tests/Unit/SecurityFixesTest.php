@@ -29,7 +29,7 @@ it('refuses a pattern that repeats a repetition', function (string $pattern): vo
 })->throws(InvalidRedirectException::class)->with(['/(a+)+', '/(.*)*x', '/(a*)*', '/(?:a+){2,}', '/(\d+)+/end']);
 
 it('keeps the ordinary patterns', function (string $pattern): void {
-    expect(new Redirect($pattern, '/to', 301, true)->regex)->toBeTrue();
+    expect((new Redirect($pattern, '/to', 301, true))->regex)->toBeTrue();
 })->with(['/blog/(.*)', '/news/(\d{4})/(.+)', '/a+b', '/(foo|bar)/baz', '/page/(\d+)/?']);
 
 it('resolves the dots of an address before the gate sees it', function (string $uri, string $path): void {
