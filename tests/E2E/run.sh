@@ -16,7 +16,7 @@ for i in $(seq 1 60); do docker exec hl-e2e-mysql mysqladmin ping -h 127.0.0.1 -
 # WordPress comes from the host: a container often cannot reach api.wordpress.org
 [ -s /tmp/wp-latest.tar.gz ] || curl -fsSL -o /tmp/wp-latest.tar.gz https://wordpress.org/latest.tar.gz
 
-docker run --rm --network hl-net -u 0 -v /tmp/wp-latest.tar.gz:/wp.tar.gz:ro -v "$S/wp":/var/www/html -v "$PKG":/pkg wordpress:cli-php8.4 sh -c '
+docker run --rm --network hl-net -u 0 -e SAMPLES="${SAMPLES:-}" -v /tmp/wp-latest.tar.gz:/wp.tar.gz:ro -v "$S/wp":/var/www/html -v "$PKG":/pkg wordpress:cli-php8.4 sh -c '
 wp() { php -d memory_limit=1G /usr/local/bin/wp "$@"; }
 cd /var/www/html
 tar xzf /wp.tar.gz --strip-components=1
