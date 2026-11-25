@@ -269,6 +269,10 @@ Contact Form 7 is supported and verified against the real plugin in CI. A checkb
 
 The repository follows the [Pollora harness](https://github.com/Pollora/harness) (profile `core`): `composer qa` runs every gate. `tests/E2E/run.sh` (Docker) starts a throwaway WordPress with the package as a mu-plugin and checks the contract over real HTTP with `curl`: the gate, CORS, caching, tokens, preview, search, the doctor.
 
+## What it costs
+
+Measured on a throwaway WordPress with Yoast SEO, Polylang and WPGraphQL active (median of 60 requests, `rest_do_request` inside PHP, so without the network): the list of ten posts in full goes from 64 ms to 72 ms (the links in each content are rewritten), the same list with `_fields=id,title,link` from 4.4 ms to 4.7 ms, and a single post is unchanged (6.0 ms to 5.6 ms). Indicative: measure your own site.
+
 ## Doctor
 
 `wp headless doctor` looks at the running site and says what exposes it or breaks the front end, with the fix for each finding (`--format=json` for a script; it exits with an error when a check fails): the front-end URL and HTTPS, CORS, the users route as a visitor sees it, a locked REST API, plain permalinks, preview, revalidation and its cron, WPGraphQL introspection, redirect loops and chains, the theme, displayed PHP errors.
