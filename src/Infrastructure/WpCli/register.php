@@ -14,7 +14,9 @@ use Pollora\Headless\Infrastructure\Redirect\OptionRedirectStore;
 use Pollora\Headless\Infrastructure\Redirect\RedirectCatalog;
 use Pollora\Headless\Infrastructure\Revalidation\ActionSchedulerScheduler;
 use Pollora\Headless\Infrastructure\Revalidation\RevalidatorFactory;
+use Pollora\Headless\Infrastructure\Status\Doctor;
 use Pollora\Headless\Infrastructure\Status\StatusReport;
+use Pollora\Headless\Infrastructure\WordPress\DoctorProbe;
 use Pollora\Headless\Infrastructure\WordPress\SiteContext;
 use Pollora\Headless\Infrastructure\WordPress\StubTheme;
 use Pollora\Headless\Infrastructure\WordPress\UserMetaTokenStore;
@@ -48,6 +50,12 @@ if (defined('WP_CLI') && WP_CLI && class_exists('WP_CLI')) {
             switch_theme($slug);
         },
         new WpCliOutput,
+        static function () use ($settings): array {
+            $config = $settings();
+            $urls = $config->urls ?? new UrlMapper($config->backend, $config->backend);
+
+            return Doctor::run($config, (new DoctorProbe(new RedirectCatalog([new OptionRedirectStore, new OldSlugRedirects($urls)])))->facts());
+        },
     ));
     WP_CLI::add_command('headless revalidate ping', new RevalidateCommand(
         static fn (): Revalidator => RevalidatorFactory::fromSettings($settings()),
