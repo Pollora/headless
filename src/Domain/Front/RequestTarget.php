@@ -27,7 +27,7 @@ final readonly class RequestTarget
     public static function fromUri(string $uri, string $method = 'GET', string $basePath = ''): self
     {
         $parts = explode('?', $uri, 2);
-        $path = '/'.ltrim($parts[0], '/');
+        $path = self::resolveDots('/'.ltrim($parts[0], '/'));
         $basePath = '/'.trim($basePath, '/');
 
         if ($basePath !== '/' && ($path === $basePath || str_starts_with($path, $basePath.'/'))) {
@@ -35,6 +35,27 @@ final readonly class RequestTarget
         }
 
         return new self($path, $parts[1] ?? '', strtoupper($method));
+    }
+
+    /**
+     * `/wp-admin/../` is the home page, whatever the allow-list sees in the raw address: web servers collapse the dots before WordPress runs.
+     */
+    private static function resolveDots(string $path): string
+    {
+        $segments = [];
+
+        foreach (explode('/', str_ireplace('%2e', '.', $path)) as $segment) {
+            if ($segment === '..') {
+                array_pop($segments);
+            } elseif ($segment !== '.') {
+                $segments[] = $segment;
+            }
+        }
+
+        $resolved = implode('/', $segments);
+        $resolved = '/'.ltrim($resolved, '/');
+
+        return str_ends_with($path, '/..') || str_ends_with($path, '/.') ? rtrim($resolved, '/').'/' : $resolved;
     }
 
     /** The path, with the query string when there is one. */

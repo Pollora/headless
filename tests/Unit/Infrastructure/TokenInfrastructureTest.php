@@ -71,6 +71,8 @@ function authModule(?InMemoryTokenStore $store = null, bool $rest = true): array
     $store ??= new InMemoryTokenStore;
     $service = new TokenService($store);
 
+    Functions\when('wp_get_current_user')->justReturn(null);
+
     return [new TokenAuthentication($service, fn (): bool => $rest), $service, $store];
 }
 
@@ -324,4 +326,15 @@ it('rotates with a day of grace by default and reports its mistakes', function (
         ->and($badGrace->messages[0])->toContain('not a duration')
         ->and($missing->messages[0])->toContain('No token')
         ->and($nobody->messages[0])->toContain('No user');
+});
+
+it('looks at the token itself when WordPress has not asked for the user yet', function (): void {
+    [$module] = authModule();
+    $_SERVER['HTTP_AUTHORIZATION'] = 'Bearer hl.1.aaaaaaaaaaaa.'.str_repeat('b', 43);
+    // WordPress works the user out when something first asks for it: the module's filter then runs
+    Functions\when('wp_get_current_user')->alias(static function () use ($module): void {
+        $module->authenticate(false);
+    });
+
+    expect($module->reject(null))->toBeInstanceOf(WP_Error::class);
 });

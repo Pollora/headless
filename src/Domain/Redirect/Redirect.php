@@ -37,7 +37,7 @@ final readonly class Redirect
             throw InvalidRedirectException::badTarget($to);
         }
 
-        if ($regex && ! self::compiles(self::pattern($from))) {
+        if ($regex && (! self::compiles(self::pattern($from)) || self::backtracksTooMuch($from))) {
             throw InvalidRedirectException::badPattern($from);
         }
 
@@ -59,7 +59,10 @@ final readonly class Redirect
             return null;
         }
 
-        return (string) preg_replace_callback('/\$(\d{1,2})/', static fn (array $reference): string => $matches[(int) $reference[1]] ?? '', $this->to);
+        $to = (string) preg_replace_callback('/\$(\d{1,2})/', static fn (array $reference): string => $matches[(int) $reference[1]] ?? '', $this->to);
+
+        // What a visitor's path put into the destination must still be a destination: `/$1` with `/go//evil.com` would leave the site
+        return self::isDestination($to) && ! str_starts_with($to, '/\\') ? $to : null;
     }
 
     /**
@@ -102,6 +105,15 @@ final readonly class Redirect
         } finally {
             restore_error_handler();
         }
+    }
+
+    /**
+     * Whether a pattern repeats a repetition (`(a+)+`, `(.*)*`): such a pattern can take exponential time on a path that almost matches,
+     * and the resolve route runs every pattern on what a visitor sends.
+     */
+    private static function backtracksTooMuch(string $from): bool
+    {
+        return preg_match('/[+*}]\)?[+*{]|\([^()]*[+*}]\)[+*{]/', $from) === 1;
     }
 
     /** A path without its trailing slash: `/about` and `/about/` are the same page. */

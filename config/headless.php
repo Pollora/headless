@@ -181,4 +181,12 @@ return [
     'forms' => [
         'enabled' => true,
     ],
+
+    // Advanced, off by default. On REST requests, load only these plugins (a file `acf/acf.php` or a folder `acf`): the API gets faster, but
+    // a plugin left out loses every route, type, field and login it adds on those requests. List each plugin that adds one. Classic WordPress
+    // and Bedrock only (read from the mu-plugin before the plugins load); plugins activated for a whole network are not touched.
+    'rest_plugins' => [
+        'enabled' => false,
+        'keep' => [],
+    ],
 ];

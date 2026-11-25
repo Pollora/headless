@@ -77,6 +77,11 @@ final class TokenAuthentication implements Module
             return $errors;
         }
 
+        // WordPress works the current user out lazily: until something asks for it, the token has not been looked at
+        if (! $this->rejected && ! $this->token instanceof Token && ($this->isRestRequest)()) {
+            wp_get_current_user();
+        }
+
         return $this->rejected ? new \WP_Error('headless_token_invalid', 'The API token is invalid, revoked or expired.', ['status' => 401]) : $errors;
     }
 

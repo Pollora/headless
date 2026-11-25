@@ -67,7 +67,7 @@ final class PreviewRoutes implements Module
         $token = $request->get_param('token');
 
         try {
-            $session = $this->service->exchange(is_string($token) ? $token : '');
+            $session = $this->service->exchange(is_string($token) ? $token : '', get_current_blog_id());
         } catch (Throwable $throwable) {
             return self::error($throwable);
         }
@@ -103,7 +103,7 @@ final class PreviewRoutes implements Module
 
         if (is_string($header) && preg_match('/\ABearer\s+(hlp\.\S+)\z/i', trim($header), $match) === 1) {
             try {
-                $this->userId = $this->service->authorize($match[1], $postId)->userId;
+                $this->userId = $this->service->authorize($match[1], $postId, get_current_blog_id())->userId;
             } catch (Throwable $exception) {
                 return self::error($exception);
             }

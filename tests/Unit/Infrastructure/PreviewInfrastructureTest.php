@@ -5,6 +5,10 @@ declare(strict_types=1);
 use Brain\Monkey\Actions;
 use Brain\Monkey\Filters;
 use Brain\Monkey\Functions;
+
+beforeEach(function (): void {
+    Functions\when('get_current_blog_id')->justReturn(1);
+});
 use Pollora\Headless\Application\Preview\PreviewService;
 use Pollora\Headless\Domain\Preview\PreviewClaims;
 use Pollora\Headless\Domain\Preview\PreviewTokenType;
@@ -254,13 +258,13 @@ it('previews nothing for a post that does not exist', function (): void {
 });
 
 it('reads the preview settings', function (): void {
-    $settings = Settings::fromArray(['frontend_url' => 'https://www.example.com', 'preview' => ['url' => '/draft', 'link_ttl' => 5, 'session_ttl' => 10, 'secret' => ' s3cret ']], 'https://cms.example.com');
+    $settings = Settings::fromArray(['frontend_url' => 'https://www.example.com', 'preview' => ['url' => '/draft', 'link_ttl' => 5, 'session_ttl' => 10, 'secret' => ' '.str_repeat('s', 40).' ']], 'https://cms.example.com');
     $absolute = Settings::fromArray(['frontend_url' => 'https://www.example.com', 'preview' => ['url' => 'https://preview.example.org/enter?x=1']], 'https://cms.example.com');
     $off = Settings::fromArray(['frontend_url' => 'https://www.example.com', 'preview' => ['enabled' => false]], 'https://cms.example.com');
     $noFront = Settings::fromArray([], 'https://cms.example.com');
 
     expect($settings->previewUrl)->toBe('https://www.example.com/draft')
-        ->and($settings->previewSecret)->toBe('s3cret')
+        ->and($settings->previewSecret)->toBe(str_repeat('s', 40))
         ->and($settings->previewLinkTtl)->toBe(30)
         ->and($settings->previewSessionTtl)->toBe(60)
         ->and($absolute->previewUrl)->toBe('https://preview.example.org/enter')

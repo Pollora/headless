@@ -15,7 +15,7 @@ parameters:
         - vendor/wpsyntex/polylang-stubs/polylang-stubs.php
     ignoreErrors:
         # Action Scheduler is a plugin, not part of the WordPress stubs: the package uses its functions only after checking they exist
-        - '#Function as_[a-z_]+ not found#'
+        - '#Function (as_[a-z_]+|get_graphql_setting) not found#'
         # WPGraphQL is a plugin too: its error class exists only while it is active, and the guard runs from its own filter
         - '#GraphQL\\Error\\UserError#'
         # Contact Form 7 too: the adapter runs only once it checked the plugin is active
