@@ -78,7 +78,7 @@ final class TokenAuthentication implements Module
         }
 
         // WordPress works the current user out lazily: until something asks for it, the token has not been looked at
-        if (! $this->rejected && $this->token === null && ($this->isRestRequest)()) {
+        if (! $this->rejected && ! $this->token instanceof Token && ($this->isRestRequest)()) {
             wp_get_current_user();
         }
 
