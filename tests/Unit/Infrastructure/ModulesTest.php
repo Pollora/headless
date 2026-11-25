@@ -143,8 +143,8 @@ it('hooks no gate when the front is left as it is', function (): void {
 
     expect(Bootstrap::modules($settings))->toHaveCount(6);
 
-    Actions\expectAdded('template_redirect')->once();
-    Actions\expectAdded('rest_api_init')->never();
+    Actions\expectAdded('template_redirect')->never();
+    Actions\expectAdded('rest_api_init')->once();
     Filters\expectAdded('rest_pre_dispatch')->once();
     Filters\expectAdded('wp_sitemaps_add_provider')->once();
     Actions\expectAdded('init')->once();

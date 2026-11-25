@@ -28,6 +28,8 @@ It works on a classic WordPress, on Bedrock and inside a [Pollora](https://pollo
 | Media | A file of the library in one shape whatever its kind (`GET /wp-json/headless/v1/media/{id}`: url, sizes, srcset, alt, caption, the focal point set with `pollora/media`), the featured image of a post in full without a second request, and the uploads served from a CDN. |
 | Blocks | The blocks of a post as JSON that does not change shape: `?_fields=id,headless_blocks`. See [Blocks](#blocks-as-json). |
 | SEO | The search and social metadata of a post or a term in one shape whichever plugin runs (Yoast SEO, Rank Math, All in One SEO, SEOPress), with every address on the front end: `?_fields=id,headless_seo`. See [SEO](#seo-metadata). |
+| GraphQL | WPGraphQL made safe for a public site: its settings imposed in code, CORS, API tokens with scopes. See [GraphQL](#graphql-optional). |
+| Schema, search, forms | `wp headless schema` (openapi or graphql), `GET /headless/v1/search`, `GET /headless/v1/forms` (Contact Form 7). |
 | URL mapper | `UrlMapper::toFront()` turns a URL of the WordPress site into the URL of the same page on the front end. It is the one place every URL the package hands out goes through. |
 
 Nothing changes on the public site until you set the front-end URL: a site that is not told where its front end lives is never locked.
@@ -222,9 +224,46 @@ The keys are the same whichever plugin gave them, and `null` when it has nothing
 
 The Rank Math redirections of its manager (exact and pattern ones) join the [redirects](#redirects) of the site. The redirections of Yoast Premium, All in One SEO Pro and SEOPress are not read yet, and The SEO Framework is not supported yet.
 
+## GraphQL (optional)
+
+REST is the contract; if you also run [WPGraphQL](https://wordpress.org/plugins/wp-graphql/), the package makes it safe for a public site. Nothing happens while the plugin is not active, and the package never ships its code.
+
+- Its settings are **imposed in code** (the `graphql` section of the settings), not written to the database: no public introspection, no debug output, batches of five at most and a depth limit of 15, because WPGraphQL has no query cost limit. Set a key to `null` to leave that setting to WPGraphQL.
+- Its `Access-Control-Allow-Origin: *` is replaced by the [CORS](#install) policy of the package.
+- An API token (`Authorization: Bearer hl.…`) may call it. A token without the `write` scope cannot run a mutation, and a token limited to routes needs `/graphql` among them.
+- **Preview**: a server-side client sends its API token and `X-GraphQL-Preview: database_id=12`, which WPGraphQL handles itself. The preview *session* (`hlp.…`) is not accepted on GraphQL on purpose: it is made for one post, and WPGraphQL would run the request with all the rights of the editor.
+- With introspection closed, a client generator reads the schema with a token, or from the file `wp headless schema graphql --file=schema.graphql`.
+
+## Schema files
+
+`wp headless schema openapi --namespace=wp/v2,headless/v1 --file=openapi.json` writes an OpenAPI 3.0 document of the REST API (routes, path and query parameters, request bodies), and `wp headless schema graphql` the GraphQL schema as SDL. Feed them to your client generator. WordPress does not describe what an endpoint returns, so every answer is a plain `200`.
+
+## Search
+
+```js
+const found = await (await fetch('https://cms.example.com/wp-json/headless/v1/search?q=finch&type=post,page&lang=fr&page=1&per_page=10')).json();
+// { query, page, per_page, total, pages, results: [{ id, type, title, excerpt, url, language, date, image }] }
+```
+
+It looks in the public content types (or the ones in `type`), leaves out what a password protects, and gives each result its address on the front end. `per_page` is capped by `per_page_max`. The filter `headless/search/args` changes the `WP_Query` arguments, to bring in a search plugin. Only active once a front-end URL is set.
+
+## Forms
+
+`GET /wp-json/headless/v1/forms` lists the forms of the site, and `/forms/cf7/12` describes one: its fields (`name`, `type`, `required`, `multiple`, choices) and where to post them.
+
+```js
+const form = await (await fetch('https://cms.example.com/wp-json/headless/v1/forms/cf7/12')).json();
+const body = new FormData();
+for (const [name, value] of Object.entries(form.submit.extra)) body.append(name, value); // Contact Form 7 needs its unit tag
+body.append('your-email', 'a@example.com');
+await fetch(form.submit.url, { method: 'POST', body }); // multipart/form-data, taken by the form plugin itself
+```
+
+Contact Form 7 is supported and verified against the real plugin in CI. A checkbox group is posted as `name[]`. Gravity Forms, WPForms and the others are not supported yet; `add_filter('headless/forms/providers', …)` adds an adapter (a `FormProvider`).
+
 ## Roadmap
 
-`0.1` core · `0.2` CORS, REST security and speed, URL mapping, Polylang and WPML, API tokens · `0.3` content preview · `0.4` revalidation webhooks · `0.5` site manifest, redirects, media, blocks as JSON · `0.6` SEO: Yoast, Rank Math, AIOSEO, SEOPress (this release) · `0.7` optional WPGraphQL, schema snapshots, forms and search · `0.8` doctor, end-to-end tests · `1.0` frozen contract.
+`0.1` core · `0.2` CORS, REST security and speed, URL mapping, Polylang and WPML, API tokens · `0.3` content preview · `0.4` revalidation webhooks · `0.5` site manifest, redirects, media, blocks as JSON · `0.6` SEO: Yoast, Rank Math, AIOSEO, SEOPress · `0.7` optional WPGraphQL, schema files, search and forms (this release) · `0.8` doctor, end-to-end tests · `1.0` frozen contract.
 
 ## Quality
 

@@ -16,7 +16,7 @@ $root = getcwd() ?: '.';
 
 return (new Configuration)
     ->disableReportingUnmatchedIgnores()
-    ->ignoreUnknownClassesRegex('~^(WP_|Walker_|Requests_|wpdb$)~')
+    ->ignoreUnknownClassesRegex('~^(WP_|WPCF7_|Walker_|Requests_|wpdb$)~')
     // Action Scheduler and WPGraphQL are plugins, loaded by WordPress or by another package: the code checks it exists before it uses it
     ->ignoreUnknownClasses(['ActionScheduler', 'ActionScheduler_Store', 'GraphQL\\Error\\UserError', 'GraphQL\\Utils\\SchemaPrinter', 'WPGraphQL'])
     ->ignoreUnknownFunctionsRegex('~.*~')
