@@ -4,6 +4,11 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Changed
+
+- Development: `antecedent/patchwork` is pinned to the commit of antecedent/patchwork#235, so that the mutation score is measured right.
+- Tests only: the true mutation score of the suite went from 78 % to over 94 %.
+
 ## [1.0.1] - 2026-11-27
 
 Security fixes: upgrade.
