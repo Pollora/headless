@@ -87,7 +87,7 @@ if (defined('WP_CLI') && WP_CLI && class_exists('WP_CLI')) {
     WP_CLI::add_command('headless schema', new SchemaCommand(
         static fn (): array => rest_get_server()->get_routes(),
         static fn (): array => ['title' => (string) get_bloginfo('name'), 'version' => (string) get_bloginfo('version'), 'server' => rest_url()],
-        static function (): ?string {
+        static function (): mixed {
             if (! class_exists('WPGraphQL') || ! class_exists('GraphQL\\Utils\\SchemaPrinter')) {
                 return null;
             }

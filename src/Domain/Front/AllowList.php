@@ -48,7 +48,7 @@ final readonly class AllowList
 
     public function with(string ...$prefixes): self
     {
-        return new self([...$this->prefixes, ...$prefixes]);
+        return new self([...$this->prefixes, ...array_values($prefixes)]);
     }
 
     public function allows(RequestTarget $target): bool

@@ -30,7 +30,7 @@ final class ActionSchedulerScheduler implements Scheduler
             return false;
         }
 
-        return class_exists('ActionScheduler', false) ? \ActionScheduler::is_initialized() : did_action('action_scheduler_init') > 0;
+        return class_exists('ActionScheduler', false) ? \ActionScheduler::is_initialized() === true : did_action('action_scheduler_init') > 0;
     }
 
     public function scheduleFlush(int $delay): void

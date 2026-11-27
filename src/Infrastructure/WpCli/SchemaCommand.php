@@ -14,9 +14,9 @@ use Throwable;
 final readonly class SchemaCommand
 {
     /**
-     * @param  Closure(): array<string, list<array<string, mixed>>>  $routes  the REST routes of the site
+     * @param  Closure(): array<mixed>  $routes  the REST routes of the site
      * @param  Closure(): array{title: string, version: string, server: string}  $site  what the OpenAPI document says of the site
-     * @param  Closure(): ?string  $graphql  the GraphQL schema as SDL, or null when WPGraphQL is not active
+     * @param  Closure(): mixed  $graphql  the GraphQL schema as SDL, or null when WPGraphQL is not active
      * @param  Closure(string, string): bool  $write  saves a file; replaced in tests
      */
     public function __construct(
@@ -47,7 +47,15 @@ final readonly class SchemaCommand
      */
     public function openapi(array $args = [], array $assoc = []): void
     {
-        $namespaces = array_values(array_filter(array_map(trim(...), explode(',', (string) ($assoc['namespace'] ?? ''))), static fn (string $namespace): bool => $namespace !== ''));
+        $namespace = $assoc['namespace'] ?? '';
+
+        if (! is_scalar($namespace)) {
+            $this->output->error('--namespace takes a comma-separated list.');
+
+            return;
+        }
+
+        $namespaces = array_values(array_filter(array_map(trim(...), explode(',', (string) $namespace)), static fn (string $one): bool => $one !== ''));
         $site = ($this->site)();
 
         $document = (new OpenApiBuilder($site['title'], $site['version'], $site['server'], $namespaces))->build(($this->routes)());
@@ -82,6 +90,12 @@ final readonly class SchemaCommand
 
         if ($schema === null) {
             $this->output->error('WPGraphQL is not active.');
+
+            return;
+        }
+
+        if (! is_string($schema)) {
+            $this->output->error('The GraphQL schema could not be printed: WPGraphQL gave no text.');
 
             return;
         }

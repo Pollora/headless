@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Pollora\Headless\Infrastructure\WordPress;
 
 use Pollora\Headless\Domain\Redirect\RedirectRules;
+use Pollora\Headless\Domain\Scalar;
 use Pollora\Headless\Infrastructure\Redirect\RedirectCatalog;
 use Pollora\Headless\Infrastructure\Revalidation\ActionSchedulerScheduler;
 use Pollora\Headless\Infrastructure\Seo\SeoProviders;
@@ -24,7 +25,7 @@ final readonly class DoctorProbe
         return new DoctorFacts(
             self::anonymousStatus('/wp/v2/users'),
             self::anonymousStatus('/wp/v2/posts'),
-            (string) get_option('permalink_structure', ''),
+            Scalar::string(get_option('permalink_structure', '')),
             defined('WP_DEBUG_DISPLAY') ? (bool) WP_DEBUG_DISPLAY : (defined('WP_DEBUG') && WP_DEBUG),
             wp_get_theme()->exists(),
             defined('DISABLE_WP_CRON') && DISABLE_WP_CRON,

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Pollora\Headless\Infrastructure\WordPress;
 
+use Pollora\Headless\Domain\Scalar;
+
 /**
  * A computed field of a REST answer that costs something (the blocks of a post, its featured image in full):
  * WordPress computes every registered field when a request does not limit them, so these fields are computed only
@@ -17,8 +19,8 @@ final class OptInField
     public static function requested(\WP_REST_Request $request, string $field): bool
     {
         $fields = $request->get_param('_fields');
-        $fields = is_array($fields) ? $fields : explode(',', (string) $fields);
+        $fields = is_array($fields) ? $fields : explode(',', Scalar::string($fields));
 
-        return in_array($field, array_map(trim(...), array_map(strval(...), $fields)), true);
+        return in_array($field, array_map(static fn (mixed $name): string => trim(Scalar::string($name)), $fields), true);
     }
 }

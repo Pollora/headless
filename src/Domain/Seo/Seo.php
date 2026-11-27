@@ -19,7 +19,7 @@ final readonly class Seo
      * @param  list<string>  $directives  robots directives other than index and follow, such as `max-image-preview:large`
      * @param  array{type: ?string, title: ?string, description: ?string, url: ?string, site_name: ?string, locale: ?string, images: list<array{url: string, width: ?int, height: ?int, alt: ?string}>}  $openGraph
      * @param  array{card: ?string, title: ?string, description: ?string, image: ?string, site: ?string, creator: ?string}  $twitter
-     * @param  list<array<string, mixed>>  $jsonLd  the nodes of the structured data graph
+     * @param  list<array<mixed>>  $jsonLd  the nodes of the structured data graph
      * @param  list<array{label: string, url: ?string}>  $breadcrumbs
      */
     public function __construct(
@@ -58,7 +58,7 @@ final readonly class Seo
             $url($this->canonical),
             $openGraph,
             $twitter,
-            self::walk($this->jsonLd, $map),
+            array_map(static fn (array $node): array => self::walk($node, $map), $this->jsonLd),
             array_map(static fn (array $crumb): array => ['label' => $crumb['label'], 'url' => $url($crumb['url'])], $this->breadcrumbs),
         );
     }

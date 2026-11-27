@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Pollora\Headless\Domain\Schema;
 
+use Pollora\Headless\Domain\Scalar;
+
 /**
  * An OpenAPI 3.0 document from the routes of the WordPress REST API.
  *
@@ -11,8 +13,6 @@ namespace Pollora\Headless\Domain\Schema;
  * each route is a pattern with named groups, and each of its endpoints lists its methods and its arguments.
  * The result is meant for a client generator, not for a reader: every answer is a plain `200`, since
  * WordPress does not describe what an endpoint returns outside of the schema of its resources.
- *
- * @phpstan-type Endpoint array{methods?: array<string, mixed>|string, args?: mixed}
  */
 final readonly class OpenApiBuilder
 {
@@ -29,23 +29,28 @@ final readonly class OpenApiBuilder
     ) {}
 
     /**
-     * @param  array<string, list<array<string, mixed>>>  $routes  the route patterns and their endpoints
-     * @return array<string, mixed>
+     * @param  array<mixed>  $routes  the route patterns and their endpoints; what is not an endpoint is left out
+     * @return array{openapi: string, info: array{title: string, version: string}, servers: list<array{url: string}>, paths: array<string, array<string, mixed>>, components: array<string, mixed>}
      */
     public function build(array $routes): array
     {
         $paths = [];
 
         foreach ($routes as $pattern => $endpoints) {
+            $pattern = (string) $pattern;
             $path = self::path($pattern);
 
-            if (! $this->wanted($path)) {
+            if (! is_array($endpoints) || ! $this->wanted($path)) {
                 continue;
             }
 
             $names = self::pathParameters($pattern);
 
             foreach ($endpoints as $endpoint) {
+                if (! is_array($endpoint)) {
+                    continue;
+                }
+
                 foreach (self::methods($endpoint['methods'] ?? []) as $method) {
                     $paths[$path][strtolower($method)] = $this->operation($method, $path, $names, self::args($endpoint['args'] ?? []));
                 }
@@ -109,14 +114,14 @@ final readonly class OpenApiBuilder
      */
     private static function methods(mixed $methods): array
     {
-        $names = is_array($methods) ? array_keys(array_filter($methods)) : explode(',', (string) $methods);
-        $names = array_map(static fn (mixed $name): string => strtoupper(trim((string) $name)), $names);
+        $names = is_array($methods) ? array_keys(array_filter($methods)) : explode(',', Scalar::string($methods));
+        $names = array_map(static fn (int|string $name): string => strtoupper(trim((string) $name)), $names);
 
         return array_values(array_intersect(self::METHODS, $names));
     }
 
     /**
-     * @return array<string, array<string, mixed>>
+     * @return array<string, array<mixed>>
      */
     private static function args(mixed $args): array
     {
@@ -129,7 +134,7 @@ final readonly class OpenApiBuilder
 
     /**
      * @param  list<string>  $pathNames
-     * @param  array<string, array<string, mixed>>  $args
+     * @param  array<string, array<mixed>>  $args
      * @return array<string, mixed>
      */
     private function operation(string $method, string $path, array $pathNames, array $args): array
@@ -186,13 +191,13 @@ final readonly class OpenApiBuilder
     /**
      * The JSON schema of an argument: its type, and the limits WordPress states.
      *
-     * @param  array<string, mixed>  $arg
+     * @param  array<mixed>  $arg
      * @return array<string, mixed>
      */
     private static function schema(array $arg): array
     {
         $type = $arg['type'] ?? 'string';
-        $type = is_array($type) ? (array_values(array_diff($type, ['null']))[0] ?? 'string') : $type;
+        $type = is_array($type) ? (array_values(array_filter($type, static fn (mixed $one): bool => $one !== 'null'))[0] ?? 'string') : $type;
         $type = is_string($type) && in_array($type, ['string', 'integer', 'number', 'boolean', 'array', 'object'], true) ? $type : 'string';
 
         $schema = ['type' => $type];

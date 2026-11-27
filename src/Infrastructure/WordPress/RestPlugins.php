@@ -25,7 +25,7 @@ final readonly class RestPlugins implements Module
     /**
      * The module the settings ask for, or null when the setting is off.
      *
-     * @param  array<string, mixed>  $query  `$_GET`
+     * @param  array<mixed>  $query  `$_GET`
      */
     public static function fromSettings(string $requestUri, array $query): ?self
     {

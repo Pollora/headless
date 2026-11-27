@@ -28,4 +28,9 @@ final class InvalidSettingsException extends InvalidArgumentException
     {
         return new self(sprintf('"%s" is required and is empty.', $key));
     }
+
+    public static function unreadable(string $key): self
+    {
+        return new self(sprintf('The "%s" configuration cannot be read as settings.', $key));
+    }
 }

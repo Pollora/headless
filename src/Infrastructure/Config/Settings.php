@@ -74,7 +74,7 @@ final readonly class Settings
     ) {}
 
     /**
-     * @param  array<string, mixed>  $config  the `headless` settings (see config/headless.php for every key)
+     * @param  array<mixed>  $config  the `headless` settings (see config/headless.php for every key)
      * @param  string  $backendUrl  the URL of the WordPress site, normally home_url()
      */
     public static function fromArray(array $config, string $backendUrl): self
@@ -146,7 +146,7 @@ final readonly class Settings
     /**
      * The signing secret of the preview, null when it is left to the salts of the site.
      *
-     * @param  array<string, mixed>  $preview
+     * @param  array<mixed>  $preview
      *
      * @throws InvalidSettingsException when it is too short to resist guessing
      */
@@ -234,7 +234,7 @@ final readonly class Settings
     /**
      * The ceiling for `per_page`; null when it would not lower WordPress's own (100).
      *
-     * @param  array<string, mixed>  $config
+     * @param  array<mixed>  $config
      */
     private static function perPageMax(array $config): ?int
     {
@@ -264,7 +264,7 @@ final readonly class Settings
     /**
      * Where the front end handles previews, or null when previews are off or there is no front end.
      *
-     * @param  array<string, mixed>  $config
+     * @param  array<mixed>  $config
      */
     private static function previewUrl(array $config, ?Origin $front): ?string
     {
@@ -280,7 +280,7 @@ final readonly class Settings
     /**
      * The targets of the revalidation notifications; none when it is switched off.
      *
-     * @param  array<string, mixed>  $config
+     * @param  array<mixed>  $config
      * @return list<Target>
      *
      * @throws InvalidSettingsException when a target has no secret: an unsigned notification would be accepted by anyone
@@ -317,7 +317,7 @@ final readonly class Settings
     /**
      * The address the CDN serves the uploads from, without its trailing slash; null when there is none.
      *
-     * @param  array<string, mixed>  $config
+     * @param  array<mixed>  $config
      */
     private static function mediaCdn(array $config): ?string
     {
@@ -349,7 +349,7 @@ final readonly class Settings
     }
 
     /**
-     * @param  array<string, mixed>  $config
+     * @param  array<mixed>  $config
      */
     private static function string(array $config, string $key, string $default = ''): string
     {
@@ -359,7 +359,7 @@ final readonly class Settings
     }
 
     /**
-     * @param  array<string, mixed>  $config
+     * @param  array<mixed>  $config
      */
     private static function bool(array $config, string $key, bool $default): bool
     {
@@ -369,7 +369,7 @@ final readonly class Settings
     }
 
     /**
-     * @param  array<string, mixed>  $config
+     * @param  array<mixed>  $config
      */
     private static function int(array $config, string $key, int $default): int
     {
@@ -379,7 +379,7 @@ final readonly class Settings
     }
 
     /**
-     * @param  array<string, mixed>  $config
+     * @param  array<mixed>  $config
      * @return list<string>
      */
     private static function strings(array $config, string $key): array

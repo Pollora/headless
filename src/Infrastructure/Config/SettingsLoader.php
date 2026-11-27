@@ -29,7 +29,7 @@ final class SettingsLoader
     /**
      * The settings as an array, before they are checked: usable before WordPress can tell its own address.
      *
-     * @return array<string, mixed>
+     * @return array<mixed>
      */
     public static function config(int $siteId = 1): array
     {
@@ -55,7 +55,7 @@ final class SettingsLoader
      * The settings of one site: the shared ones, then those of `sites[$siteId]`; the short constant fills `frontend_url` when nothing else sets it.
      *
      * @param  array<mixed>  $config
-     * @return array<string, mixed>
+     * @return array<mixed>
      */
     public static function merge(array $config, ?string $frontendUrl, int $siteId): array
     {
@@ -70,7 +70,6 @@ final class SettingsLoader
             $config['frontend_url'] = $frontendUrl;
         }
 
-        /** @var array<string, mixed> $config */
         return $config;
     }
 }

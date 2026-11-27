@@ -10,6 +10,8 @@ if (! class_exists('WP_Error', false)) {
     class_alias(FakeWpError::class, 'WP_Error');
 }
 
+require_once __DIR__.'/Stubs/wordpress.php';
+
 /*
 |--------------------------------------------------------------------------
 | Test Case

@@ -8,6 +8,7 @@ use Closure;
 use Pollora\Headless\Domain\Exceptions\InvalidRedirectException;
 use Pollora\Headless\Domain\Redirect\Redirect;
 use Pollora\Headless\Domain\Redirect\RedirectStore;
+use Pollora\Headless\Domain\Scalar;
 use Pollora\Headless\Infrastructure\Redirect\RedirectCatalog;
 
 /**
@@ -53,7 +54,7 @@ final readonly class RedirectCommand
     public function add(array $args = [], array $assoc = []): void
     {
         try {
-            $redirect = new Redirect($args[0] ?? '', $args[1] ?? '', (int) ($assoc['status'] ?? 301), ($assoc['regex'] ?? false) === true);
+            $redirect = new Redirect($args[0] ?? '', $args[1] ?? '', Scalar::int($assoc['status'] ?? 301), ($assoc['regex'] ?? false) === true);
         } catch (InvalidRedirectException $invalidRedirectException) {
             $this->output->error($invalidRedirectException->getMessage());
 

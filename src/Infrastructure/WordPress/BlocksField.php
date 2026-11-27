@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Pollora\Headless\Infrastructure\WordPress;
 
 use Pollora\Headless\Domain\Block\BlockTree;
+use Pollora\Headless\Domain\Scalar;
 
 /**
  * The blocks of a post as stable JSON (see BlockTree), in the field `headless_blocks` of its REST answer, when
@@ -41,7 +42,7 @@ final readonly class BlocksField implements Module
      */
     public function blocks(array $post, string $field, \WP_REST_Request $request): ?array
     {
-        $wpPost = OptInField::requested($request, self::FIELD) ? get_post((int) ($post['id'] ?? 0)) : null;
+        $wpPost = OptInField::requested($request, self::FIELD) ? get_post(Scalar::int($post['id'] ?? 0)) : null;
 
         if (! $wpPost instanceof \WP_Post || post_password_required($wpPost)) {
             return null;
@@ -76,7 +77,14 @@ final readonly class BlocksField implements Module
 
                     return $attributes;
                 },
-                static fn (array $block): string => render_block($block),
+                // The keys render_block() reads are checked; what else a parser added to the block stays
+                static fn (array $block): string => render_block(array_replace($block, [
+                    'blockName' => is_string($block['blockName'] ?? null) ? $block['blockName'] : null,
+                    'attrs' => is_array($block['attrs'] ?? null) ? $block['attrs'] : [],
+                    'innerBlocks' => array_filter(is_array($block['innerBlocks'] ?? null) ? $block['innerBlocks'] : [], is_array(...)),
+                    'innerHTML' => Scalar::string($block['innerHTML'] ?? ''),
+                    'innerContent' => is_array($block['innerContent'] ?? null) ? $block['innerContent'] : [],
+                ])),
                 static fn (string $name): bool => ($type = $registry->get_registered($name)) instanceof \WP_Block_Type && $type->is_dynamic(),
             );
         } finally {

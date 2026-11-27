@@ -7,6 +7,7 @@ namespace Pollora\Headless\Infrastructure\WordPress;
 use Closure;
 use Pollora\Headless\Domain\Cache\Etag;
 use Pollora\Headless\Domain\Cache\RestCachePolicy;
+use Pollora\Headless\Domain\Scalar;
 
 /**
  * Makes the REST API cheap to ask again.
@@ -83,7 +84,7 @@ final class RestPerformance implements Module
      */
     public function validate(bool $served, mixed $result, \WP_REST_Request $request): bool
     {
-        if ($served || ! $result instanceof \WP_HTTP_Response || ! str_starts_with((string) ($result->get_headers()['Cache-Control'] ?? ''), 'public')) {
+        if ($served || ! $result instanceof \WP_HTTP_Response || ! str_starts_with(Scalar::string($result->get_headers()['Cache-Control'] ?? ''), 'public')) {
             return $served;
         }
 

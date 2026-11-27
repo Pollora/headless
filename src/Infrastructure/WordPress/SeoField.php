@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Pollora\Headless\Infrastructure\WordPress;
 
 use Pollora\Headless\Domain\Front\FrontUrls;
+use Pollora\Headless\Domain\Scalar;
 use Pollora\Headless\Domain\Seo\SeoProvider;
 
 /**
@@ -49,7 +50,7 @@ final readonly class SeoField implements Module
             return null;
         }
 
-        return $this->provider->forPost((int) ($post['id'] ?? 0))?->withUrls(fn (string $url): string => $this->urls->toFront($url))->toArray();
+        return $this->provider->forPost(Scalar::int($post['id'] ?? 0))?->withUrls(fn (string $url): string => $this->urls->toFront($url))->toArray();
     }
 
     /**
@@ -63,6 +64,6 @@ final readonly class SeoField implements Module
             return null;
         }
 
-        return $this->provider->forTerm((int) ($term['id'] ?? 0), (string) ($term['taxonomy'] ?? ''))?->withUrls(fn (string $url): string => $this->urls->toFront($url))->toArray();
+        return $this->provider->forTerm(Scalar::int($term['id'] ?? 0), Scalar::string($term['taxonomy'] ?? ''))?->withUrls(fn (string $url): string => $this->urls->toFront($url))->toArray();
     }
 }

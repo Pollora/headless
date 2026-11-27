@@ -35,7 +35,7 @@ final readonly class MediaCdn implements Module
 
         foreach ($sources as $width => $source) {
             if (is_array($source) && is_string($source['url'] ?? null)) {
-                $sources[$width]['url'] = $this->urls->toCdn($source['url']);
+                $sources[$width] = [...$source, 'url' => $this->urls->toCdn($source['url'])];
             }
         }
 

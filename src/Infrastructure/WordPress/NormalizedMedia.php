@@ -7,6 +7,7 @@ namespace Pollora\Headless\Infrastructure\WordPress;
 use Pollora\Headless\Domain\Media\FocalPoint;
 use Pollora\Headless\Domain\Media\MediaCatalog;
 use Pollora\Headless\Domain\Media\MediaKind;
+use Pollora\Headless\Domain\Scalar;
 
 /**
  * A file of the media library in one shape that does not depend on its kind: what a front end needs to show it,
@@ -43,13 +44,13 @@ final class NormalizedMedia implements MediaCatalog
             'mime' => $mime,
             'url' => $url,
             'title' => $post->post_title,
-            'alt' => (string) get_post_meta($id, '_wp_attachment_image_alt', true),
+            'alt' => Scalar::string(get_post_meta($id, '_wp_attachment_image_alt', true)),
             'caption' => $post->post_excerpt,
             'description' => $post->post_content,
-            'width' => $isImage && isset($metadata['width']) ? (int) $metadata['width'] : null,
-            'height' => $isImage && isset($metadata['height']) ? (int) $metadata['height'] : null,
-            'filesize' => isset($metadata['filesize']) ? (int) $metadata['filesize'] : null,
-            'duration' => ! $isImage && isset($metadata['length']) ? (int) $metadata['length'] : null,
+            'width' => $isImage ? self::number($metadata['width'] ?? null) : null,
+            'height' => $isImage ? self::number($metadata['height'] ?? null) : null,
+            'filesize' => self::number($metadata['filesize'] ?? null),
+            'duration' => $isImage ? null : self::number($metadata['length'] ?? null),
             'focal_point' => $isImage ? $this->focalPoint($id) : null,
             'sizes' => $isImage ? $this->sizes($url, $metadata) : [],
             'srcset' => $isImage ? (wp_get_attachment_image_srcset($id, 'full') ?: null) : null,
@@ -94,16 +95,25 @@ final class NormalizedMedia implements MediaCatalog
 
         foreach (is_array($metadata['sizes'] ?? null) ? $metadata['sizes'] : [] as $name => $size) {
             if (is_array($size) && is_string($size['file'] ?? null)) {
-                $sizes[(string) $name] = ['url' => $directory.'/'.$size['file'], 'width' => (int) ($size['width'] ?? 0), 'height' => (int) ($size['height'] ?? 0)];
+                $sizes[(string) $name] = ['url' => $directory.'/'.$size['file'], 'width' => Scalar::int($size['width'] ?? 0), 'height' => Scalar::int($size['height'] ?? 0)];
             }
         }
 
         ksort($sizes);
 
-        if (isset($metadata['width'], $metadata['height'])) {
-            $sizes['full'] = ['url' => $url, 'width' => (int) $metadata['width'], 'height' => (int) $metadata['height']];
+        $width = self::number($metadata['width'] ?? null);
+        $height = self::number($metadata['height'] ?? null);
+
+        if ($width !== null && $height !== null) {
+            $sizes['full'] = ['url' => $url, 'width' => $width, 'height' => $height];
         }
 
         return $sizes;
+    }
+
+    /** A measure of the file's metadata; null when it holds none. */
+    private static function number(mixed $value): ?int
+    {
+        return is_numeric($value) ? (int) $value : null;
     }
 }

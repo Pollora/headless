@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Pollora\Headless\Domain\Seo;
 
+use Pollora\Headless\Domain\Scalar;
+
 /**
  * Reads what a SEO plugin gives (its JSON, its head) into the common shape, without ever failing on a value that is not there.
  */
@@ -52,7 +54,7 @@ final class SeoMapper
     public static function aioseo(array $json): Seo
     {
         $robots = $json['robots'] ?? [];
-        $robots = is_array($robots) ? implode(',', array_map(strval(...), array_filter($robots, is_scalar(...)))) : (string) $robots;
+        $robots = is_array($robots) ? implode(',', array_map(strval(...), array_filter($robots, is_scalar(...)))) : Scalar::string($robots);
 
         $directives = array_values(array_filter(array_map(trim(...), explode(',', $robots)), static fn (string $d): bool => $d !== '' && ! in_array($d, ['index', 'follow', 'noindex', 'nofollow'], true)));
         $schema = is_array($json['schema'] ?? null) ? $json['schema'] : [];
@@ -88,8 +90,10 @@ final class SeoMapper
         $crumbs = [];
 
         foreach (is_array($data['breadcrumbs'] ?? null) ? $data['breadcrumbs'] : [] as $crumb) {
-            if (is_array($crumb) && is_string($crumb['name'] ?? $crumb['label'] ?? null)) {
-                $crumbs[] = ['label' => (string) ($crumb['name'] ?? $crumb['label']), 'url' => self::text($crumb['url'] ?? null)];
+            $label = is_array($crumb) ? ($crumb['name'] ?? $crumb['label'] ?? null) : null;
+
+            if (is_array($crumb) && is_string($label)) {
+                $crumbs[] = ['label' => $label, 'url' => self::text($crumb['url'] ?? null)];
             }
         }
 
@@ -135,7 +139,7 @@ final class SeoMapper
         if (preg_match_all('#<script[^>]*type=["\']application/ld\+json["\'][^>]*>(.*?)</script>#is', $html, $scripts) > 0) {
             foreach ($scripts[1] as $script) {
                 $decoded = json_decode(trim($script), true);
-                $nodes = is_array($decoded['@graph'] ?? null) ? $decoded['@graph'] : (is_array($decoded) ? [$decoded] : []);
+                $nodes = ! is_array($decoded) ? [] : (is_array($decoded['@graph'] ?? null) ? $decoded['@graph'] : [$decoded]);
                 array_push($graph, ...array_values(array_filter($nodes, is_array(...))));
             }
         }
@@ -218,6 +222,10 @@ final class SeoMapper
                 $crumbs = [];
 
                 foreach ($node['itemListElement'] as $item) {
+                    if (! is_array($item)) {
+                        continue;
+                    }
+
                     $thing = is_array($item['item'] ?? null) ? $item['item'] : [];
                     $label = $item['name'] ?? $thing['name'] ?? null;
 

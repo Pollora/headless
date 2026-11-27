@@ -50,8 +50,14 @@ final class OldSlugRedirects implements RedirectSource
     {
         global $wpdb;
 
+        if (! $wpdb instanceof \wpdb) {
+            return [];
+        }
+
         $rows = $wpdb->get_results($wpdb->prepare(
-            "SELECT m.post_id, m.meta_value AS old_slug FROM {$wpdb->postmeta} m INNER JOIN {$wpdb->posts} p ON p.ID = m.post_id WHERE m.meta_key = %s AND p.post_status = %s AND p.post_type NOT IN ('revision', 'attachment', 'nav_menu_item') ORDER BY m.meta_id ASC LIMIT %d",
+            "SELECT m.post_id, m.meta_value AS old_slug FROM %i m INNER JOIN %i p ON p.ID = m.post_id WHERE m.meta_key = %s AND p.post_status = %s AND p.post_type NOT IN ('revision', 'attachment', 'nav_menu_item') ORDER BY m.meta_id ASC LIMIT %d",
+            $wpdb->postmeta,
+            $wpdb->posts,
             '_wp_old_slug',
             'publish',
             self::LIMIT,
@@ -60,6 +66,11 @@ final class OldSlugRedirects implements RedirectSource
         $rules = [];
 
         foreach (is_array($rows) ? $rows : [] as $row) {
+            // A row with no post ID must not reach get_post(): it would answer with the current post
+            if (! is_object($row) || ! is_numeric($row->post_id ?? null) || ! is_string($row->old_slug ?? null)) {
+                continue;
+            }
+
             $post = get_post((int) $row->post_id);
 
             if (! $post instanceof \WP_Post || $row->old_slug === '' || $row->old_slug === $post->post_name) {
@@ -67,7 +78,7 @@ final class OldSlugRedirects implements RedirectSource
             }
 
             $old = clone $post;
-            $old->post_name = (string) $row->old_slug;
+            $old->post_name = $row->old_slug;
 
             try {
                 $rules[] = new Redirect(
