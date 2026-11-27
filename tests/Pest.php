@@ -11,6 +11,7 @@ if (! class_exists('WP_Error', false)) {
 }
 
 require_once __DIR__.'/Stubs/wordpress.php';
+require_once __DIR__.'/Fixtures/isolated.php';
 
 /*
 |--------------------------------------------------------------------------
