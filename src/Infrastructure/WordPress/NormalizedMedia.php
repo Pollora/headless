@@ -60,11 +60,12 @@ final class NormalizedMedia implements MediaCatalog
 
     /**
      * Who may see a file: anyone for a file of the library, and for a file attached to a post, whoever may see that post.
+     * A private file, or one in the media trash, is for who may read it.
      * (`read_post` is no use here: it refuses an attachment's own "inherit" status to a visitor.)
      */
     private function isVisible(\WP_Post $file): bool
     {
-        if ($file->post_status === 'private') {
+        if ($file->post_status === 'private' || $file->post_status === 'trash') {
             return current_user_can('read_post', $file->ID);
         }
 
