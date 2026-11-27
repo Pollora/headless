@@ -56,7 +56,7 @@ final class OptionRedirectStore implements RedirectStore
     }
 
     /**
-     * @return array<string, mixed>
+     * @return array<mixed>
      */
     private function read(): array
     {

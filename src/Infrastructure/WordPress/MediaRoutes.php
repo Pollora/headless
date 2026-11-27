@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Pollora\Headless\Infrastructure\WordPress;
 
 use Pollora\Headless\Domain\Media\MediaCatalog;
+use Pollora\Headless\Domain\Scalar;
 
 /**
  * Files of the media library in one shape (see NormalizedMedia):
@@ -50,7 +51,7 @@ final readonly class MediaRoutes implements Module
      */
     public function show(\WP_REST_Request $request): \WP_REST_Response|\WP_Error
     {
-        $media = $this->media->for((int) $request->get_param('id'));
+        $media = $this->media->for(Scalar::int($request->get_param('id')));
 
         return $media === null ? new \WP_Error('media_not_found', 'No such file.', ['status' => 404]) : rest_ensure_response($media);
     }
@@ -66,7 +67,7 @@ final readonly class MediaRoutes implements Module
             return null;
         }
 
-        $id = (int) get_post_thumbnail_id((int) ($post['id'] ?? 0));
+        $id = (int) get_post_thumbnail_id(Scalar::int($post['id'] ?? 0));
 
         return $id > 0 ? $this->media->for($id) : null;
     }

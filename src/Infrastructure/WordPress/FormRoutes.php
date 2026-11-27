@@ -6,6 +6,7 @@ namespace Pollora\Headless\Infrastructure\WordPress;
 
 use Pollora\Headless\Domain\Form\Form;
 use Pollora\Headless\Domain\Form\FormProvider;
+use Pollora\Headless\Domain\Scalar;
 
 /**
  * `GET /wp-json/headless/v1/forms` and `/forms/{provider}/{id}`: the forms of the site and how to send them.
@@ -64,7 +65,7 @@ final readonly class FormRoutes implements Module
                 continue;
             }
 
-            $form = $provider->find((string) $request->get_param('id'));
+            $form = $provider->find(Scalar::string($request->get_param('id')));
 
             if ($form instanceof Form) {
                 return rest_ensure_response($form->toArray());

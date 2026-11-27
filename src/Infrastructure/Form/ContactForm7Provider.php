@@ -7,6 +7,7 @@ namespace Pollora\Headless\Infrastructure\Form;
 use Pollora\Headless\Domain\Form\Form;
 use Pollora\Headless\Domain\Form\FormField;
 use Pollora\Headless\Domain\Form\FormProvider;
+use Pollora\Headless\Domain\Scalar;
 
 /**
  * The forms of Contact Form 7, described from its own form tags.
@@ -37,7 +38,9 @@ final class ContactForm7Provider implements FormProvider
         $forms = [];
 
         foreach (\WPCF7_ContactForm::find(['posts_per_page' => -1]) as $form) {
-            $forms[] = $this->describe($form);
+            if ($form instanceof \WPCF7_ContactForm) {
+                $forms[] = $this->describe($form);
+            }
         }
 
         return $forms;
@@ -55,26 +58,31 @@ final class ContactForm7Provider implements FormProvider
         $fields = [];
 
         foreach ($form->scan_form_tags() as $tag) {
-            $base = (string) $tag->basetype;
+            if (! $tag instanceof \WPCF7_FormTag) {
+                continue;
+            }
 
-            if ($tag->name === '' || in_array($base, self::SKIPPED, true) || ! in_array($base, self::TYPES, true)) {
+            $base = Scalar::string($tag->basetype);
+            $name = Scalar::string($tag->name);
+
+            if ($name === '' || in_array($base, self::SKIPPED, true) || ! in_array($base, self::TYPES, true)) {
                 continue;
             }
 
             $multiple = $base === 'checkbox' ? ! $tag->has_option('exclusive') : ($base === 'select' && $tag->has_option('multiple'));
-            $fields[] = new FormField($tag->name, $base, $tag->is_required(), $multiple, self::options($base, $tag));
+            $fields[] = new FormField($name, $base, $tag->is_required(), $multiple, self::options($base, $tag));
         }
 
-        $id = (string) $form->id();
+        $id = Scalar::string($form->id());
 
         return new Form(
             $this->name(),
             $id,
-            (string) $form->title(),
+            Scalar::string($form->title()),
             $fields,
             rest_url(sprintf('contact-form-7/v1/contact-forms/%s/feedback', $id)),
             'multipart/form-data',
-            ['_wpcf7' => $id, '_wpcf7_locale' => (string) $form->locale(), '_wpcf7_unit_tag' => sprintf('wpcf7-f%s-o1', $id)],
+            ['_wpcf7' => $id, '_wpcf7_locale' => Scalar::string($form->locale()), '_wpcf7_unit_tag' => sprintf('wpcf7-f%s-o1', $id)],
         );
     }
 
@@ -89,9 +97,10 @@ final class ContactForm7Provider implements FormProvider
 
         $options = [];
 
+        $labels = (array) $tag->labels;
+
         foreach (array_values((array) $tag->values) as $index => $value) {
-            $label = (array) $tag->labels;
-            $options[] = ['value' => (string) $value, 'label' => (string) ($label[$index] ?? $value)];
+            $options[] = ['value' => Scalar::string($value), 'label' => Scalar::string($labels[$index] ?? $value)];
         }
 
         return $options;

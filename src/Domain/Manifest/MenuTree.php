@@ -39,7 +39,7 @@ final class MenuTree
     }
 
     /**
-     * @param  array<int, list<array<string, mixed>>>  $children
+     * @param  array<int, list<array{id: int, parent: int, order: int}&array<string, mixed>>>  $children
      * @return list<int>
      */
     private static function reached(array $children): array
@@ -62,7 +62,7 @@ final class MenuTree
     }
 
     /**
-     * @param  array<int, list<array<string, mixed>>>  $children
+     * @param  array<int, list<array{id: int, parent: int, order: int}&array<string, mixed>>>  $children
      * @param  list<int>  $path  the items above this level, so that a cycle (A under B under A) ends
      * @return list<array<string, mixed>>
      */

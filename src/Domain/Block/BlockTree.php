@@ -26,9 +26,9 @@ use stdClass;
 final class BlockTree
 {
     /**
-     * @param  list<array<string, mixed>>  $parsed  what parse_blocks() returns
-     * @param  Closure(string, array<string, mixed>): array<string, mixed>  $withDefaults  the attributes of a block, completed with its type's defaults
-     * @param  Closure(array<string, mixed>): string  $render  the HTML WordPress prints for a parsed block
+     * @param  array<mixed>  $parsed  what parse_blocks() returns
+     * @param  Closure(string, array<mixed>): array<mixed>  $withDefaults  the attributes of a block, completed with its type's defaults
+     * @param  Closure(array<mixed>): string  $render  the HTML WordPress prints for a parsed block
      * @param  Closure(string): bool  $isDynamic  whether a block type renders on the server
      * @return list<array<string, mixed>>
      */
@@ -37,6 +37,10 @@ final class BlockTree
         $blocks = [];
 
         foreach ($parsed as $block) {
+            if (! is_array($block)) {
+                continue;
+            }
+
             $name = is_string($block['blockName'] ?? null) ? $block['blockName'] : null;
             $html = is_string($block['innerHTML'] ?? null) ? $block['innerHTML'] : '';
 
@@ -61,7 +65,6 @@ final class BlockTree
 
             $normalised['inner_blocks'] = self::from(is_array($block['innerBlocks'] ?? null) ? array_values($block['innerBlocks']) : [], $withDefaults, $render, $isDynamic, $id.'.');
             $blocks[] = $normalised;
-
         }
 
         return $blocks;

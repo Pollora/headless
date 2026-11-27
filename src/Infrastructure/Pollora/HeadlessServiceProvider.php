@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Pollora\Headless\Infrastructure\Pollora;
 
 use Illuminate\Support\ServiceProvider;
+use Pollora\Headless\Domain\Scalar;
 use Pollora\Headless\Infrastructure\Config\Settings;
+use Pollora\Headless\Infrastructure\Exceptions\HookServiceException;
+use Pollora\Headless\Infrastructure\Exceptions\InvalidSettingsException;
 use Pollora\Headless\Infrastructure\WordPress\Bootstrap;
 
 /**
@@ -32,12 +35,29 @@ final class HeadlessServiceProvider extends ServiceProvider
             return;
         }
 
-        /** @var array<string, mixed> $config */
-        $config = $this->app->make('config')->get('pollora.headless', []);
+        $repository = $this->app->make('config');
+
+        if (! is_object($repository) || ! method_exists($repository, 'get')) {
+            throw InvalidSettingsException::unreadable('config');
+        }
+
+        $config = $repository->get('pollora.headless', []);
+
+        // Booting with no settings would leave the public front open: a broken configuration must be seen
+        if (! is_array($config)) {
+            throw InvalidSettingsException::unreadable('pollora.headless');
+        }
+
+        $action = $this->app->make(self::ACTION);
+        $filter = $this->app->make(self::FILTER);
+
+        if (! is_object($action) || ! is_object($filter)) {
+            throw HookServiceException::notAnObject();
+        }
 
         Bootstrap::boot(
-            Settings::fromArray($config, (string) $this->app->make('config')->get('app.url', 'http://localhost')),
-            new PolloraHooks($this->app->make(self::ACTION), $this->app->make(self::FILTER)),
+            Settings::fromArray($config, Scalar::string($repository->get('app.url', 'http://localhost'))),
+            new PolloraHooks($action, $filter),
         );
     }
 }

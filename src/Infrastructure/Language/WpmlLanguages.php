@@ -54,7 +54,7 @@ final readonly class WpmlLanguages implements Languages
         $translations = [];
 
         foreach (is_array($elements) ? $elements : [] as $code => $element) {
-            if (is_object($element) && isset($element->element_id)) {
+            if (is_object($element) && isset($element->element_id) && is_numeric($element->element_id)) {
                 $translations[(string) $code] = (int) $element->element_id;
             }
         }

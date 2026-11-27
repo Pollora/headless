@@ -110,10 +110,9 @@ final class PreviewPostResponse
         setup_postdata($copy);
 
         try {
-            $data['title']['rendered'] = apply_filters('the_title', $copy->post_title, $post->ID);
-            $data['content']['rendered'] = apply_filters('the_content', $copy->post_content);
-            $data['excerpt']['rendered'] = apply_filters('the_excerpt', get_the_excerpt($copy));
-            $data['content']['protected'] = false;
+            $data['title'] = self::rendered($data['title'] ?? null, apply_filters('the_title', $copy->post_title, $post->ID));
+            $data['content'] = [...self::rendered($data['content'] ?? null, apply_filters('the_content', $copy->post_content)), 'protected' => false];
+            $data['excerpt'] = self::rendered($data['excerpt'] ?? null, apply_filters('the_excerpt', get_the_excerpt($copy)));
         } finally {
             $GLOBALS['post'] = $original;
 
@@ -123,5 +122,15 @@ final class PreviewPostResponse
         }
 
         return $data;
+    }
+
+    /**
+     * A field of the answer with its HTML replaced; what else it holds stays.
+     *
+     * @return array<mixed>
+     */
+    private static function rendered(mixed $field, mixed $html): array
+    {
+        return [...(is_array($field) ? $field : []), 'rendered' => $html];
     }
 }

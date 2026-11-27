@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Pollora\Headless\Infrastructure\WordPress;
 
 use Pollora\Headless\Domain\Redirect\Redirect;
+use Pollora\Headless\Domain\Scalar;
 use Pollora\Headless\Infrastructure\Redirect\OldSlugRedirects;
 use Pollora\Headless\Infrastructure\Redirect\OptionRedirectStore;
 use Pollora\Headless\Infrastructure\Redirect\RedirectCatalog;
@@ -62,7 +63,7 @@ final readonly class RedirectRoutes implements Module
      */
     public function resolve(\WP_REST_Request $request): \WP_REST_Response
     {
-        $match = $this->catalog->rules()->match((string) $request->get_param('path'));
+        $match = $this->catalog->rules()->match(Scalar::string($request->get_param('path')));
 
         return rest_ensure_response([
             'redirect' => $match === null ? null : ['from' => $match['rule']->from, 'to' => $match['to'], 'status' => $match['rule']->status, 'source' => $match['rule']->source],

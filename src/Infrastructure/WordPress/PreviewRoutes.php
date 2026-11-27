@@ -10,6 +10,7 @@ use Pollora\Headless\Domain\Exceptions\PreviewNotFoundException;
 use Pollora\Headless\Domain\Exceptions\PreviewTokenExpiredException;
 use Pollora\Headless\Domain\Exceptions\PreviewTokenInvalidException;
 use Pollora\Headless\Domain\Exceptions\PreviewTokenUsedException;
+use Pollora\Headless\Domain\Scalar;
 use Throwable;
 
 /**
@@ -98,7 +99,7 @@ final class PreviewRoutes implements Module
     public function authorize(\WP_REST_Request $request): bool|\WP_Error
     {
         $this->userId = 0;
-        $postId = (int) $request->get_param('id');
+        $postId = Scalar::int($request->get_param('id'));
         $header = $request->get_header('authorization');
 
         if (is_string($header) && preg_match('/\ABearer\s+(hlp\.\S+)\z/i', trim($header), $match) === 1) {
@@ -129,7 +130,7 @@ final class PreviewRoutes implements Module
      */
     public function read(\WP_REST_Request $request): \WP_REST_Response|\WP_Error
     {
-        return $this->posts->build((int) $request->get_param('id'), $this->userId, (string) $request->get_param('rev'));
+        return $this->posts->build(Scalar::int($request->get_param('id')), $this->userId, Scalar::string($request->get_param('rev')));
     }
 
     private static function error(Throwable $exception): \WP_Error

@@ -65,16 +65,26 @@ final readonly class TokenCommand
             return;
         }
 
+        $name = $this->option($assoc, 'name', 'API token');
+        $wantedScopes = $this->option($assoc, 'scopes', 'read');
+        $routes = $this->option($assoc, 'routes', '');
+        $expires = $this->option($assoc, 'expires', '');
+
+        // A value that cannot be read stops here: no route limit, or no expiry, would give more than was asked
+        if ($name === null || $wantedScopes === null || $routes === null || $expires === null) {
+            return;
+        }
+
         try {
-            $scopes = array_map(TokenScope::fromName(...), self::list((string) ($assoc['scopes'] ?? 'read')));
-            $lifetime = isset($assoc['expires']) ? Duration::seconds((string) $assoc['expires']) : null;
+            $scopes = array_map(TokenScope::fromName(...), self::list($wantedScopes));
+            $lifetime = isset($assoc['expires']) ? Duration::seconds($expires) : null;
         } catch (InvalidTokenException $invalidTokenException) {
             $this->output->error($invalidTokenException->getMessage());
 
             return;
         }
 
-        $issued = $this->tokens->create($userId, (string) ($assoc['name'] ?? 'API token'), $scopes, self::list((string) ($assoc['routes'] ?? '')), $lifetime);
+        $issued = $this->tokens->create($userId, $name, $scopes, self::list($routes), $lifetime);
 
         $this->output->success('Token '.$issued->token->id.' created. Copy the secret now: it cannot be shown again.');
         $this->output->line($issued->secret);
@@ -168,8 +178,14 @@ final readonly class TokenCommand
             return;
         }
 
+        $grace = $this->option($assoc, 'grace', '24h');
+
+        if ($grace === null) {
+            return;
+        }
+
         try {
-            $issued = $this->tokens->rotate($userId, $args[1] ?? '', Duration::seconds((string) ($assoc['grace'] ?? '24h')));
+            $issued = $this->tokens->rotate($userId, $args[1] ?? '', Duration::seconds($grace));
         } catch (TokenNotFoundException|InvalidTokenException $exception) {
             $this->output->error($exception->getMessage());
 
@@ -178,6 +194,25 @@ final readonly class TokenCommand
 
         $this->output->success('Token '.$issued->token->id.' replaces '.($args[1] ?? '').', which works for the grace period. Copy the secret now: it cannot be shown again.');
         $this->output->line($issued->secret);
+    }
+
+    /**
+     * The value of an option as text; null, with an error printed, when it is not a single value
+     * (a list set in wp-cli.yml, for instance).
+     *
+     * @param  array<string, mixed>  $assoc
+     */
+    private function option(array $assoc, string $name, string $default): ?string
+    {
+        $value = $assoc[$name] ?? $default;
+
+        if (! is_scalar($value)) {
+            $this->output->error(sprintf('--%s takes a single value.', $name));
+
+            return null;
+        }
+
+        return (string) $value;
     }
 
     private function user(string $who): ?int

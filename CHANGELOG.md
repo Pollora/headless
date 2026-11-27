@@ -4,6 +4,15 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Changed
+
+- PHPStan runs at level `max`, with no baseline. No setting, command, hook, route or payload changes.
+- Damaged or unexpected data is checked where it is read. A list or an object where text or a number is expected (an option, a database row, a filter, a plugin) reads as empty or `0`, never as `Array` or `1`; the measures of a media file that are not numbers are `null`; database rows, menu items, forms and form tags that cannot be read are left out.
+- `wp headless token` and `wp headless schema openapi` refuse an option given as a list (from `wp-cli.yml`, for instance) instead of reading it as `Array`.
+- A `headless/search/args` filter that returns neither an array nor a string is ignored.
+- In a Pollora project, a `pollora.headless` configuration that is not an array, or a hook service without `add()`, raises a named exception.
+- The three SQL queries name their tables with `%i`, which needs WordPress 6.2 or later.
+
 ## [1.0.0] - 2026-11-25
 
 First release. WordPress prepared for headless mode on classic installs, Bedrock and Pollora, for any front end that speaks HTTP.

@@ -6,6 +6,7 @@ namespace Pollora\Headless\Infrastructure\WordPress;
 
 use Pollora\Headless\Domain\Front\FrontUrls;
 use Pollora\Headless\Domain\Language\Languages;
+use Pollora\Headless\Domain\Scalar;
 use Pollora\Headless\Domain\Search\SearchQuery;
 
 /**
@@ -55,11 +56,11 @@ final readonly class SearchRoutes implements Module
     public function search(\WP_REST_Request $request): \WP_REST_Response|\WP_Error
     {
         $query = SearchQuery::fromRequest(
-            (string) $request->get_param('q'),
-            (string) $request->get_param('type'),
+            Scalar::string($request->get_param('q')),
+            Scalar::string($request->get_param('type')),
             is_string($request->get_param('lang')) ? $request->get_param('lang') : null,
-            (int) $request->get_param('page'),
-            (int) $request->get_param('per_page'),
+            Scalar::int($request->get_param('page')),
+            Scalar::int($request->get_param('per_page')),
             $this->maxPerPage,
             $this->exposedTypes(),
             $this->languages->all(),
@@ -84,10 +85,12 @@ final readonly class SearchRoutes implements Module
             $args['lang'] = $query->language;
         }
 
-        $found = new \WP_Query(apply_filters('headless/search/args', $args, $query));
+        $filtered = apply_filters('headless/search/args', $args, $query);
+        // A filter that gives back nothing a query can be made of (a forgotten return) is ignored
+        $found = new \WP_Query(is_array($filtered) || is_string($filtered) ? $filtered : $args);
         $results = [];
 
-        foreach ($found->posts as $post) {
+        foreach ($found->posts ?? [] as $post) {
             if ($post instanceof \WP_Post) {
                 $results[] = $this->result($post);
             }

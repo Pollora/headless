@@ -6,6 +6,7 @@ namespace Pollora\Headless\Infrastructure\Revalidation;
 
 use Pollora\Headless\Domain\Revalidation\ChangeEvent;
 use Pollora\Headless\Domain\Revalidation\PendingEvents;
+use Pollora\Headless\Domain\Scalar;
 
 /**
  * Keeps each waiting change in an option of its own (`headless_ev_<random>`, not autoloaded).
@@ -28,8 +29,13 @@ final class OptionPendingEvents implements PendingEvents
     {
         global $wpdb;
 
+        if (! $wpdb instanceof \wpdb) {
+            return [];
+        }
+
         $rows = $wpdb->get_results($wpdb->prepare(
-            "SELECT option_name, option_value FROM {$wpdb->options} WHERE option_name LIKE %s ORDER BY option_id ASC LIMIT %d",
+            'SELECT option_name, option_value FROM %i WHERE option_name LIKE %s ORDER BY option_id ASC LIMIT %d',
+            $wpdb->options,
             $wpdb->esc_like(self::PREFIX).'%',
             self::LIMIT,
         ));
@@ -37,11 +43,11 @@ final class OptionPendingEvents implements PendingEvents
         $events = [];
 
         foreach (is_array($rows) ? $rows : [] as $row) {
-            if (! delete_option($row->option_name)) {
+            if (! is_object($row) || ! is_string($row->option_name ?? null) || ! delete_option($row->option_name)) {
                 continue;
             }
 
-            $data = json_decode((string) $row->option_value, true);
+            $data = json_decode(Scalar::string($row->option_value ?? ''), true);
             $event = is_array($data) ? ChangeEvent::fromArray($data) : null;
 
             if ($event instanceof ChangeEvent) {

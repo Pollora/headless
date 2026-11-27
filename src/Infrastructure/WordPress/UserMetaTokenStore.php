@@ -55,7 +55,7 @@ final class UserMetaTokenStore implements TokenStore
     }
 
     /**
-     * @return array<string, mixed>
+     * @return array<mixed>
      */
     private function read(int $userId): array
     {
