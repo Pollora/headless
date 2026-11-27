@@ -4,6 +4,10 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-11-27
+
+Security fixes: upgrade.
+
 ### Security
 
 - A file in the media trash is given only to a user who may read it, as a private file is.
