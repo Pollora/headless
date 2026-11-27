@@ -4,6 +4,11 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Security
+
+- A file in the media trash is given only to a user who may read it, as a private file is.
+- The redirects list the old slugs of content types with public pages only, as WordPress redirects them.
+
 ### Changed
 
 - PHPStan runs at level `max`, with no baseline. No setting, command, hook, route or payload changes.

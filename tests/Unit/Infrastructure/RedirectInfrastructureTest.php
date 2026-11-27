@@ -174,6 +174,8 @@ it('keeps the list of old slugs for five minutes and drops it on demand', functi
 
     $post = Mockery::mock('WP_Post');
     $post->post_name = 'hello';
+    $post->post_type = 'post';
+    Functions\when('is_post_type_viewable')->justReturn(true);
     Functions\when('get_post')->alias(static fn (int $id): ?WP_Post => $id === 7 ? $post : null);
     Functions\when('get_permalink')->alias(static fn (WP_Post $p): string => 'https://cms.example.com/'.$p->post_name.'/');
 
@@ -205,6 +207,8 @@ it('skips a post whose old and current addresses are the same (plain permalinks)
     $GLOBALS['wpdb'] = $wpdb;
     $post = Mockery::mock('WP_Post');
     $post->post_name = 'hello';
+    $post->post_type = 'post';
+    Functions\when('is_post_type_viewable')->justReturn(true);
     Functions\when('get_post')->justReturn($post);
     Functions\when('get_permalink')->justReturn('https://cms.example.com/?p=7');
 
@@ -306,4 +310,23 @@ it('reads the redirect settings', function (): void {
     expect($on->redirects)->toBeTrue()->and($on->oldSlugRedirects)->toBeTrue()
         ->and($off->redirects)->toBeFalse()->and($off->oldSlugRedirects)->toBeFalse()
         ->and(Settings::fromArray([], 'https://cms.example.com')->redirects)->toBeFalse();
+});
+
+it('lists no old slug of a content type that has no public pages', function (): void {
+    Functions\when('get_transient')->justReturn(false);
+    Functions\when('set_transient')->justReturn(true);
+    $wpdb = Mockery::mock('wpdb');
+    $wpdb->postmeta = 'wp_postmeta';
+    $wpdb->posts = 'wp_posts';
+    $wpdb->shouldReceive('prepare')->andReturn('SQL');
+    $wpdb->shouldReceive('get_results')->andReturn([(object) ['post_id' => '1', 'old_slug' => 'public-before'], (object) ['post_id' => '2', 'old_slug' => 'internal-before']]);
+    $GLOBALS['wpdb'] = $wpdb;
+    Functions\when('get_post')->alias(static fn (int $id): WP_Post => new WP_Post(['ID' => $id, 'post_name' => 'now-'.$id, 'post_type' => $id === 1 ? 'post' : 'internal_note']));
+    Functions\when('is_post_type_viewable')->alias(static fn (string $type): bool => $type === 'post');
+    Functions\when('get_permalink')->alias(static fn (WP_Post $post): string => 'https://cms.example.com/'.$post->post_type.'/'.$post->post_name.'/');
+
+    $rules = (new OldSlugRedirects(new UrlMapper(Origin::fromUrl('https://cms.example.com'), Origin::fromUrl('https://www.example.com'))))->redirects();
+    unset($GLOBALS['wpdb']);
+
+    expect(array_map(static fn ($rule): string => $rule->from, $rules))->toBe(['/post/public-before/']);
 });

@@ -263,3 +263,13 @@ it('uses the language of the post when a multilingual plugin tells it', function
 
     expect($pending->events[0]->locale)->toBe('fr')->and($pending->events[1]->locale)->toBe('en_US');
 });
+
+it('says nothing of a post published and taken back within one request', function (): void {
+    [$watcher, $pending] = watcher();
+
+    $watcher->postTransition('publish', 'draft', aPost());
+    $watcher->postTransition('draft', 'publish', aPost(status: 'draft'));
+    $watcher->commit();
+
+    expect($pending->drain())->toBe([]);
+});

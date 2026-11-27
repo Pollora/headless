@@ -73,7 +73,8 @@ final class OldSlugRedirects implements RedirectSource
 
             $post = get_post((int) $row->post_id);
 
-            if (! $post instanceof \WP_Post || $row->old_slug === '' || $row->old_slug === $post->post_name) {
+            // Only a type with public pages: WordPress keeps old slugs for the others too, and the list is public
+            if (! $post instanceof \WP_Post || ! is_post_type_viewable($post->post_type) || $row->old_slug === '' || $row->old_slug === $post->post_name) {
                 continue;
             }
 
