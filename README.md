@@ -1,3 +1,16 @@
+<p align="center">
+  <a href="https://pollora.dev">
+    <img src="https://raw.githubusercontent.com/Pollora/.github/main/brand/banners/headless.png" width="100%" alt="Pollora Headless: WordPress as the back end of any front end">
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://packagist.org/packages/pollora/headless"><img src="https://img.shields.io/packagist/v/pollora/headless" alt="Latest version"></a>
+  <a href="https://packagist.org/packages/pollora/headless"><img src="https://img.shields.io/packagist/dt/pollora/headless" alt="Total downloads"></a>
+  <a href="https://github.com/Pollora/headless/actions/workflows/harness.yml"><img src="https://github.com/Pollora/headless/actions/workflows/harness.yml/badge.svg" alt="Quality"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/Pollora/headless" alt="License"></a>
+</p>
+
 # Pollora Headless
 
 Prepare WordPress for headless mode: lock the public front, remove what a headless site does not use, secure and speed up the API, preview drafts from a JS front end and tell it when content changes.
