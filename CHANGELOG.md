@@ -11,6 +11,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 - `wp headless token` and `wp headless schema openapi` refuse an option given as a list (from `wp-cli.yml`, for instance) instead of reading it as `Array`.
 - A `headless/search/args` filter that returns neither an array nor a string is ignored.
 - In a Pollora project, a `pollora.headless` configuration that is not an array, or a hook service without `add()`, raises a named exception.
+- The sources of Rank Math's redirections are read without ever instantiating an object.
 - The three SQL queries name their tables with `%i`, which needs WordPress 6.2 or later.
 
 ## [1.0.0] - 2026-11-25

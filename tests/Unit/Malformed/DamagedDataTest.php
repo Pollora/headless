@@ -177,20 +177,15 @@ it('skips the Rank Math rows and sources it cannot read, and keeps the others', 
     $wpdb->shouldReceive('esc_like')->andReturnArg(0);
     $wpdb->shouldReceive('prepare')->andReturn('SQL');
     $wpdb->shouldReceive('get_var')->andReturn('wp_rank_math_redirections');
-    $source = serialize('x');
     $wpdb->shouldReceive('get_results')->andReturn([
         'junk',
         (object) ['sources' => null, 'url_to' => '/a', 'header_code' => '301'],
-        (object) ['sources' => [['comparison' => 'exact', 'pattern' => 'x']], 'url_to' => '/a', 'header_code' => '301'],
-        (object) ['sources' => 'arrayed', 'url_to' => ['/a'], 'header_code' => '301'],
-        (object) ['sources' => 'good', 'url_to' => '/new', 'header_code' => '302'],
+        (object) ['sources' => [['comparison' => 'exact', 'pattern' => 'not-serialized']], 'url_to' => '/a', 'header_code' => '301'],
+        (object) ['sources' => 'plain text', 'url_to' => '/a', 'header_code' => '301'],
+        (object) ['sources' => serialize([['comparison' => 'exact', 'pattern' => ['not text']], ['comparison' => 'exact', 'pattern' => 'bad-target'], new ArrayObject(['comparison' => 'exact', 'pattern' => 'object'])]), 'url_to' => ['/a'], 'header_code' => '301'],
+        (object) ['sources' => serialize([['comparison' => 'exact', 'pattern' => 'old']]), 'url_to' => '/new', 'header_code' => '302'],
     ]);
     $GLOBALS['wpdb'] = $wpdb;
-    Functions\when('maybe_unserialize')->alias(static fn (string $data): mixed => match ($data) {
-        'arrayed' => [['comparison' => 'exact', 'pattern' => ['not text']], ['comparison' => 'exact', 'pattern' => 'bad-target']],
-        'good' => [['comparison' => 'exact', 'pattern' => 'old']],
-        default => $source,
-    });
 
     expect(array_map(static fn ($rule): array => $rule->toArray(), (new RankMathRedirects)->redirects()))
         ->toBe([['from' => '/old', 'to' => '/new', 'status' => 302, 'regex' => false, 'source' => 'rankmath']]);

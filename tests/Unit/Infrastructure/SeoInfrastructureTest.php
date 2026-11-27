@@ -109,7 +109,6 @@ function rankMathDatabase(bool $tableExists, array $rows): void
     $wpdb->shouldReceive('get_var')->andReturn($tableExists ? 'wp_rank_math_redirections' : null);
     $wpdb->shouldReceive('get_results')->andReturn($rows);
     $GLOBALS['wpdb'] = $wpdb;
-    Functions\when('maybe_unserialize')->alias(static fn (mixed $value): mixed => is_string($value) && str_starts_with($value, 'a:') ? unserialize($value) : $value);
 }
 
 it('reads the exact and pattern redirections of Rank Math, with their status', function (): void {

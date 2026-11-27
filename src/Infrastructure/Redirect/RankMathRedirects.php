@@ -35,11 +35,12 @@ final class RankMathRedirects implements RedirectSource
         $rules = [];
 
         foreach (is_array($rows) ? $rows : [] as $row) {
-            if (! is_object($row) || ! is_string($row->sources ?? null)) {
+            // Rank Math keeps the sources of a rule as a serialized list: anything else is no rule
+            if (! is_object($row) || ! is_string($row->sources ?? null) || ! str_starts_with($row->sources, 'a:')) {
                 continue;
             }
 
-            $sources = maybe_unserialize($row->sources);
+            $sources = @unserialize($row->sources, ['allowed_classes' => false]); // nosemgrep -- allowed_classes is false: no object can be instantiated
 
             foreach (is_array($sources) ? $sources : [] as $source) {
                 $comparison = is_array($source) ? ($source['comparison'] ?? '') : '';
