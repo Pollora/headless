@@ -1,8 +1,8 @@
 # Pollora Headless
 
-Prepare WordPress for headless mode: lock the public front, remove what a headless site does not use, and (in the releases to come) secure and speed up the API, preview drafts from a JS front end and tell it when content changes.
+Prepare WordPress for headless mode: lock the public front, remove what a headless site does not use, secure and speed up the API, preview drafts from a JS front end and tell it when content changes.
 
-> **Status: `0.6`, not released.** The front gate and clean-up (0.1), CORS, REST security and speed, front-end links, multilingual sites and API tokens (0.2), the preview of drafts (0.3), the notifications of changes (0.4) the normalised content (site manifest, redirects, media, blocks: 0.5) and the SEO metadata (0.6) are in. The API may change until `1.0`. The roadmap below says what comes next; the API may change until `1.0`.
+> **Version 1.0.** The [HTTP contract](docs/HTTP-CONTRACT.md), the settings, the hooks and the WP-CLI commands follow semantic versioning: nothing there breaks a client before 2.0. The PHP classes are internal.
 
 It works on a classic WordPress, on Bedrock and inside a [Pollora](https://pollora.dev) project, with the same core. Any Node application can use it: the contract is plain HTTP, no client library is needed.
 
