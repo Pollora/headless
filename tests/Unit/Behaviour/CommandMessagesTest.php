@@ -122,9 +122,7 @@ it('says which token it did not find when given none', function (string $command
 
     saidTokens($output, new InMemoryTokenStore)->{$command}(['editor']);
 
-    expect($output->messages)->toHaveCount(1)
-        ->and($output->messages[0])->toStartWith('error: ')
-        ->and($output->messages[0])->not->toContain('Mutator');
+    expect($output->messages)->toBe(['error: No token "" for this user.']);
 })->with(['revoke', 'rotate']);
 
 function saidDoctor(Output $output, array $checks): HeadlessCommand

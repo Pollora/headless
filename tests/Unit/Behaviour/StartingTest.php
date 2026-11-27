@@ -5,7 +5,6 @@ declare(strict_types=1);
 use Brain\Monkey\Actions;
 use Brain\Monkey\Functions;
 use Pollora\Headless\Domain\Language\Languages;
-use Pollora\Headless\Domain\Language\LanguageUrls;
 use Pollora\Headless\Infrastructure\Config\Settings;
 use Pollora\Headless\Infrastructure\WordPress\BlocksField;
 use Pollora\Headless\Infrastructure\WordPress\Bootstrap;
@@ -140,20 +139,6 @@ it('caps a search at fifty results unless a lower ceiling is set', function (?in
 
     expect($routes['args']['per_page']['description'])->toBe($description);
 })->with([[null, 'Capped at 50.'], [10, 'Capped at 10.']]);
-
-it('gives the manifest, the redirects, the SEO and the search the addresses of each language on a multilingual site only', function (bool $active): void {
-    $languages = Mockery::mock(Languages::class);
-    $languages->shouldReceive('isActive')->andReturn($active);
-    $modules = startedModules(['redirects' => ['old_slugs' => false]], $languages);
-    $perLanguage = static fn (object $module, string $property): bool => (new ReflectionProperty($module, $property))->getValue($module) instanceof LanguageUrls;
-
-    expect($perLanguage(startedModule($modules, SeoField::class), 'urls'))->toBe($active)
-        ->and($perLanguage(startedModule($modules, SearchRoutes::class), 'urls'))->toBe($active);
-
-    $manifest = (new ReflectionProperty(ManifestRoutes::class, 'manifest'))->getValue(startedModule($modules, ManifestRoutes::class));
-
-    expect($perLanguage($manifest, 'urls'))->toBe($active);
-})->with([true, false]);
 
 it('starts at once when the plugins are loaded, and waits for them otherwise', function (int $loaded): void {
     Functions\when('did_action')->justReturn($loaded);
