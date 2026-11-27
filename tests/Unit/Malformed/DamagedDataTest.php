@@ -131,12 +131,17 @@ it('reads scalars as a cast would, and anything else as the default', function (
     'object' => [new stdClass, 'd', 7],
 ]);
 
-it('refuses to boot on a Pollora configuration that is not settings, instead of leaving the front open', function (mixed $repository, string $key): void {
-    (new HeadlessServiceProvider(polloraApp(['config' => $repository, 'hooks' => new stdClass])))->boot();
-})->with([
-    'headless is a string' => [fn (): object => configRepository('yes'), 'pollora.headless'],
-    'no configuration repository' => [fn (): object => new stdClass, 'config'],
-])->throws(InvalidSettingsException::class, 'cannot be read as settings');
+it('refuses to boot on a Pollora configuration that is not settings, instead of leaving the front open', function (): void {
+    $app = polloraApp(['config' => configRepository('yes'), 'hooks' => new stdClass]);
+
+    expect(fn () => (new HeadlessServiceProvider($app))->boot())->toThrow(InvalidSettingsException::class, 'The "pollora.headless" configuration cannot be read as settings.');
+});
+
+it('names a configuration service it cannot read', function (): void {
+    $app = polloraApp(['config' => new stdClass, 'hooks' => new stdClass]);
+
+    expect(fn () => (new HeadlessServiceProvider($app))->boot())->toThrow(InvalidSettingsException::class, 'The "config" configuration cannot be read as settings.');
+});
 
 it('names a hook service that is not an object', function (): void {
     (new HeadlessServiceProvider(polloraApp(['config' => configRepository([]), 'hooks' => 'nope'])))->boot();
